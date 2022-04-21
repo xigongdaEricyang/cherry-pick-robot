@@ -297,18 +297,19 @@ def add_community_upstream(comm_repo):
         print(">>> Fail to add remote, cause: {}".format(e))
         raise
 
+def is_cherry_pick_label_pr(pr):
+    prLabelRegex = re.compile(r"^v[0-9]*\.[0-9]*-cherry-pick$")
+    title = pr.title
+    pr_labels = pr.get_labels()
+    labels = [label.name for label in pr_labels if prLabelRegex.match(label.name)]
+    return len(labels) > 0
+
+
+
 def get_need_sync_prs(repo):
     prs = repo.get_pulls(state='open', sort='updated', direction='desc', base='master')
-    # print(">>> {}".format(prs))
-    prLabelRegex = re.compile(r"^v[0-9]*\.[0-9]*-cherry-pick$")
-    versionLabelRegex = re.compile(r"^v[0-9]*\.[0-9]*")
-    for pr in prs:
-        title = pr.title
-        pr_labels = pr.get_labels()
-        labels = [label.name for label in pr_labels if prLabelRegex.match(label.name)]
-        print(">>> {}".format(labels))
-        print(">>> {}, {}".format(title, pr.number))
-    return [pr for pr in prs if 'cherry-pick' in [label.name for label in pr_labels]]
+    # versionLabelRegex = re.compile(r"^v[0-9]*\.[0-9]*")
+    return [pr for pr in prs if is_cherry_pick_label_pr(pr)]
 
 
 def main(repo):
@@ -316,6 +317,8 @@ def main(repo):
     # org_members = get_org_members(get_org_name(cur_repo))
     
     need_sync_prs = get_need_sync_prs(cur_repo)
+    for pr in need_sync_prs:
+      print(">>>>, {}", pr.title)
     print(">>> {} PRs need to sync".format(len(need_sync_prs)))
     # unmerged_community_commits = find_unmerged_community_commits_in_ent_repo(comm_repo, ent_repo)
     # unmerged_community_commits.reverse()
