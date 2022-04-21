@@ -304,10 +304,11 @@ def get_need_sync_prs(repo):
     versionLabelRegex = re.compile(r"^v[0-9]*\.[0-9]*")
     for pr in prs:
         title = pr.title
-        labels = [label.name for label in labels if label.name.endswith('cherry-pick') if re.match(prLabelRegex)]
+        pr_labels = pr.get_labels()
+        labels = [label.name for label in pr_labels if label.name.endswith('cherry-pick') if re.match(prLabelRegex)]
         print(">>> {}".format(labels))
         print(">>> {}, {}".format(title, pr.number))
-    return [pr for pr in prs if 'cherry-pick' in [label.name for label in pr.get_labels()]]
+    return [pr for pr in prs if 'cherry-pick' in [label.name for label in pr_labels]]
 
 
 def main(repo):
