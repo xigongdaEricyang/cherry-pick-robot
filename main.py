@@ -305,7 +305,7 @@ def get_need_sync_prs(repo):
     for pr in prs:
         title = pr.title
         pr_labels = pr.get_labels()
-        labels = [label.name for label in pr_labels if label.name.endswith('cherry-pick') if re.match(prLabelRegex)]
+        labels = [label.name for label in pr_labels if prLabelRegex.match(label.name)]
         print(">>> {}".format(labels))
         print(">>> {}, {}".format(title, pr.number))
     return [pr for pr in prs if 'cherry-pick' in [label.name for label in pr_labels]]
