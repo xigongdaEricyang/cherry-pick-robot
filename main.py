@@ -298,7 +298,7 @@ def add_community_upstream(comm_repo):
 
 def get_need_sync_prs(repo):
     prs = repo.get_pulls(state='open')
-    print(">>> {} PRs found".format(len(prs)))
+    print(">>> {}".format(prs))
     return [pr for pr in prs if 'cherry-pick' in [label.name for label in pr.get_labels()]]
 
 
