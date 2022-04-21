@@ -7,7 +7,7 @@ import time
 
 from pathlib import Path
 from github import Github
-from dingtalkchatbot.chatbot import DingtalkChatbot
+# from dingtalkchatbot.chatbot import DingtalkChatbot
 from sh import git
 
 
@@ -296,49 +296,53 @@ def add_community_upstream(comm_repo):
         print(">>> Fail to add remote, cause: {}".format(e))
         raise
 
+def get_need_sync_prs(repo):
+    prs = repo.get_pulls(state='open')
+    print(">>> {} PRs found".format(len(prs)))
+    return [pr for pr in prs if 'cherry-pick' in [label.name for label in pr.get_labels()]]
 
-def main(community_repo, enterprise_repo):
-    comm_repo = gh.get_repo(community_repo)
-    ent_repo = gh.get_repo(enterprise_repo)
 
-    org_members = get_org_members(get_org_name(community_repo))
+def main(repo):
+    cur_repo = gh.get_repo(repo)
+    # org_members = get_org_members(get_org_name(cur_repo))
+    
+    need_sync_prs = get_need_sync_prs(cur_repo)
+    print(">>> {} PRs need to sync".format(len(need_sync_prs)))
+    # unmerged_community_commits = find_unmerged_community_commits_in_ent_repo(comm_repo, ent_repo)
+    # unmerged_community_commits.reverse()
 
-    unmerged_community_commits = find_unmerged_community_commits_in_ent_repo(comm_repo, ent_repo)
-    unmerged_community_commits.reverse()
+    # add_community_upstream(comm_repo)
 
-    add_community_upstream(comm_repo)
+    # succ_pr_list = []
+    # err_pr_list = []
+    # for ci in unmerged_community_commits:
+    #     res = create_pr(comm_repo, ent_repo, ci, org_members)
+    #     md = pr_link(comm_repo, ci.pr_num)
+    #     if res[1] >= 0:
+    #         md += " -> " + pr_link(ent_repo, res[1])
+    #     md += " " + ci.login()
+    #     if res[0]:
+    #         succ_pr_list.append(md)
+    #         print(f">>> {pr_ref(ent_repo, res[1])} has been migrated from {pr_ref(comm_repo, ci.pr_num)}")
+    #     else:
+    #         err_pr_list.append(md)
+    #         print(f">>> {pr_ref(comm_repo, ci.pr_num)} could not be merged into {pr_ref(ent_repo, res[1])}")
+    #         break
 
-    succ_pr_list = []
-    err_pr_list = []
-    for ci in unmerged_community_commits:
-        res = create_pr(comm_repo, ent_repo, ci, org_members)
-        md = pr_link(comm_repo, ci.pr_num)
-        if res[1] >= 0:
-            md += " -> " + pr_link(ent_repo, res[1])
-        md += " " + ci.login()
-        if res[0]:
-            succ_pr_list.append(md)
-            print(f">>> {pr_ref(ent_repo, res[1])} has been migrated from {pr_ref(comm_repo, ci.pr_num)}")
-        else:
-            err_pr_list.append(md)
-            print(f">>> {pr_ref(comm_repo, ci.pr_num)} could not be merged into {pr_ref(ent_repo, res[1])}")
-            break
+    # succ_prs = '\n\n'.join(succ_pr_list) if succ_pr_list else "None"
+    # err_prs = '\n\n'.join(err_pr_list) if err_pr_list else "None"
 
-    succ_prs = '\n\n'.join(succ_pr_list) if succ_pr_list else "None"
-    err_prs = '\n\n'.join(err_pr_list) if err_pr_list else "None"
+    # print(">>> Enable dingtalk notification: {}".format(enable_dingtalk_notification))
+    # if enable_dingtalk_notification and (len(succ_pr_list) > 0 or len(err_pr_list) > 0):
+    #     text = f"### Auto Merge Status\nMerge successfully:\n\n{succ_prs}\n\nFailed to merge:\n\n{err_prs}"
+    #     dingtalk_bot.send_markdown(title='Auto Merge Status', text=text, is_at_all=False)
 
-    print(">>> Enable dingtalk notification: {}".format(enable_dingtalk_notification))
-    if enable_dingtalk_notification and (len(succ_pr_list) > 0 or len(err_pr_list) > 0):
-        text = f"### Auto Merge Status\nMerge successfully:\n\n{succ_prs}\n\nFailed to merge:\n\n{err_prs}"
-        dingtalk_bot.send_markdown(title='Auto Merge Status', text=text, is_at_all=False)
-
-    if len(unmerged_community_commits) == 0:
-        print(">>> There's no any PRs to sync")
+    # if len(unmerged_community_commits) == 0:
+    #     print(">>> There's no any PRs to sync")
 
 
 if __name__ == "__main__":
-    src_repo = os.environ["INPUT_FROM_REPO"]
-    target_repo = os.environ["GITHUB_REPOSITORY"]
-    print(">>> From: {}".format(src_repo))
-
-    # main(src_repo, target_repo)
+    cur_repo = os.environ["GITHUB_REPOSITORY"]
+    print(">>> From: {}".format(cur_repo))
+    
+    main(cur_repo)
