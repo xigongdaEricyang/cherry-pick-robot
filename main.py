@@ -311,6 +311,15 @@ def get_need_sync_prs(repo):
     # versionLabelRegex = re.compile(r"^v[0-9]*\.[0-9]*")
     return [pr for pr in prs if is_cherry_pick_label_pr(pr)]
 
+def generate_pr(pr):
+    try:
+        branch= "auto-sync-{}-{}".format(pr.title, pr.number)
+        commits = pr.get_commits()
+        print(">>> Generate commit: {}".format([commit.sha for commit in commits]))
+        # for commit in commits:
+    except Exception as e:
+      print(">>> Fail to merge PR {}, cause: {}".format(pr.pr_num, e))
+    # return (False, -1 if new_pr is None else new_pr.number)
 
 def main(repo):
     cur_repo = gh.get_repo(repo)
@@ -318,7 +327,7 @@ def main(repo):
     
     need_sync_prs = get_need_sync_prs(cur_repo)
     for pr in need_sync_prs:
-      print(">>>>, {}", pr.title)
+        generate_pr(pr)
     print(">>> {} PRs need to sync".format(len(need_sync_prs)))
     # unmerged_community_commits = find_unmerged_community_commits_in_ent_repo(comm_repo, ent_repo)
     # unmerged_community_commits.reverse()
