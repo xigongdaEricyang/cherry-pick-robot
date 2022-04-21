@@ -1999,12 +1999,18 @@ const core = tslib_1.__importStar(__nccwpck_require__(186));
 const util_1 = __nccwpck_require__(837);
 function run() {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        const inputs = {
-            fromRepo: core.getInput('from-repo'),
-            repoToken: core.getInput('repo-token'),
-            prLabel: core.getInput('pr-label'),
-        };
-        console.log(`Inputs: ${(0, util_1.inspect)(inputs)}`);
+        try {
+            const inputs = {
+                fromRepo: core.getInput('from_repo'),
+                repoToken: core.getInput('repo_token'),
+                prLabel: core.getInput('pr_label'),
+            };
+            core.debug(`Inputs1: ${(0, util_1.inspect)(inputs)}`);
+        }
+        catch (error) {
+            core.debug((0, util_1.inspect)(error));
+            core.setFailed(error.message);
+        }
     });
 }
 run();
