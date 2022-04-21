@@ -303,8 +303,8 @@ def get_need_sync_prs(repo):
     for pr in prs:
         title = pr.title
         labels = pr.get_labels()
-        print(">>> {}".format([label.name for label in pr.get_labels()]))
-        print(">>> {}, {}".format(title, ))
+        print(">>> {}".format([label.name for label in labels]))
+        print(">>> {}, {}".format(title, pr.number))
     return [pr for pr in prs if 'cherry-pick' in [label.name for label in pr.get_labels()]]
 
 
