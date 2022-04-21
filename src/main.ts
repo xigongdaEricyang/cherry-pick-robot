@@ -11,7 +11,7 @@ async function run (): Promise<void> {
       prLabel: core.getInput('pr_label'),
     }
   
-    core.debug(`Inputs: ${inspect(inputs)}`)
+    core.debug(`Inputs1: ${inspect(inputs)}`)
   } catch (error: any) {
     core.debug(inspect(error))
     core.setFailed(error.message)
