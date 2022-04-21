@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from email.mime import base
 import os
 import re
 import sh
@@ -297,8 +298,10 @@ def add_community_upstream(comm_repo):
         raise
 
 def get_need_sync_prs(repo):
-    prs = repo.get_pulls(state='open')
-    print(">>> {}".format(prs))
+    prs = repo.get_pulls(state='open', sort='updated', direction='desc', base='master')
+    # print(">>> {}".format(prs))
+    for pr in prs:
+        print(">>> {}, {}".format(pr.title, pr.get_labels()))
     return [pr for pr in prs if 'cherry-pick' in [label.name for label in pr.get_labels()]]
 
 
