@@ -300,10 +300,12 @@ def add_community_upstream(comm_repo):
 def get_need_sync_prs(repo):
     prs = repo.get_pulls(state='open', sort='updated', direction='desc', base='master')
     # print(">>> {}".format(prs))
+    prLabelRegex = re.compile(r"^v[0-9]*\.[0-9]*-cherry-pick$")
+    versionLabelRegex = re.compile(r"^v[0-9]*\.[0-9]*")
     for pr in prs:
         title = pr.title
-        labels = pr.get_labels()
-        print(">>> {}".format([label.name for label in labels]))
+        labels = [label.name for label in labels if label.name.endswith('cherry-pick') if re.match(prLabelRegex)]
+        print(">>> {}".format(labels))
         print(">>> {}, {}".format(title, pr.number))
     return [pr for pr in prs if 'cherry-pick' in [label.name for label in pr.get_labels()]]
 
