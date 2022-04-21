@@ -13,6 +13,7 @@ function run() {
                 prLabel: core.getInput('pr_label'),
             };
             core.debug(`Inputs1: ${(0, util_1.inspect)(inputs)}`);
+            console.log(`Inputs: ${(0, util_1.inspect)(inputs)}`);
         }
         catch (error) {
             core.debug((0, util_1.inspect)(error));
