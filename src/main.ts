@@ -4,13 +4,18 @@ import * as core from '@actions/core';
 import { inspect } from 'util';
 
 async function run (): Promise<void> {
-  const inputs = {
-    fromRepo: core.getInput('from_repo'),
-    repoToken: core.getInput('repo_token'),
-    prLabel: core.getInput('pr_label'),
+  try {
+    const inputs = {
+      fromRepo: core.getInput('from_repo'),
+      repoToken: core.getInput('repo_token'),
+      prLabel: core.getInput('pr_label'),
+    }
+  
+    core.debug(`Inputs: ${inspect(inputs)}`)
+  } catch (error: any) {
+    core.debug(inspect(error))
+    core.setFailed(error.message)
   }
-
-  console.log(`Inputs: ${inspect(inputs)}`)
 
 }
 
