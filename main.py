@@ -192,7 +192,7 @@ def append_migration_in_msg(repo, ci, pr):
 
 def append_cherry_pick_in_msg(repo, pr):
     body = pr.body if pr.body else ""
-    return "{}\n\Cherry-pick from {}\n\n{}\n".format(body, pr_ref(repo, pr))
+    return "{}\n\Cherry-pick from {}\n\n".format(body, pr_link(repo, pr))
 
 def notify_author_by_comment(ent_repo, comm_repo, comm_ci, issue_num, comm_pr_num, org_members, conflict_files):
     comment = ""
