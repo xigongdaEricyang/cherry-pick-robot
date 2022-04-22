@@ -104,9 +104,9 @@ def apply_patch(baseBranch, branch, commits):
     print(f">>> Apply patch file to {branch}")
     stopped = False
     comm_ci = commits[0]
-    author = comm_ci.author()
-    git.config("--local", "user.name", author.name)
-    git.config("--local", "user.email", author.email)
+    cur_author = comm_ci.author()
+    git.config("--local", "user.name", cur_author.name)
+    git.config("--local", "user.email", cur_author.email)
     git.clean("-f")
     git.fetch("origin", baseBranch)
     git.checkout("-b", branch, "origin/{}".format(baseBranch))
