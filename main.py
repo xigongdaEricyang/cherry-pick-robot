@@ -27,7 +27,7 @@ gh = Github(token)
 
 prog = re.compile(r"(.*)\(#(\d+)\)(?:$|\n).*")
 title_re = re.compile(r"(.*)(?:$|\n).*")
-
+version_label_re = re.compile(r"^v[0-9]*\.[0-9]*")
 
 class Commit:
     def __init__(self, commit = None):
@@ -190,6 +190,9 @@ def append_migration_in_msg(repo, ci, pr):
     coauthor = co_authored_by(ci.author())
     return "{}\n\nMigrated from {}\n\n{}\n".format(body, pr_ref(repo, pr), coauthor)
 
+def append_cherry_pick_in_msg(repo, pr):
+    body = pr.body if pr.body else ""
+    return "{}\n\Cherry-pick from {}\n\n{}\n".format(body, pr_ref(repo, pr))
 
 def notify_author_by_comment(ent_repo, comm_repo, comm_ci, issue_num, comm_pr_num, org_members, conflict_files):
     comment = ""
@@ -297,29 +300,39 @@ def add_community_upstream(comm_repo):
         print(">>> Fail to add remote, cause: {}".format(e))
         raise
 
-def is_cherry_pick_label_pr(pr):
+def get_cherry_pick_pr_labels(pr):
     prLabelRegex = re.compile(r"^v[0-9]*\.[0-9]*-cherry-pick$")
     title = pr.title
     pr_labels = pr.get_labels()
     labels = [label.name for label in pr_labels if prLabelRegex.match(label.name)]
-    return len(labels) > 0
+    return labels
 
 
 
 def get_need_sync_prs(repo):
     prs = repo.get_pulls(state='open', sort='updated', direction='desc', base='master')
-    # versionLabelRegex = re.compile(r"^v[0-9]*\.[0-9]*")
-    return [pr for pr in prs if is_cherry_pick_label_pr(pr)]
+    # 
+    return [pr for pr in prs if len(get_cherry_pick_pr_labels(pr)) > 0]
 
-def generate_pr(pr):
+def generate_pr(repo, pr):
     try:
         branch= "auto-sync-{}-{}".format(pr.title, pr.number)
         commits = pr.get_commits()
         print(">>> Generate commit: {}".format([commit.sha for commit in commits]))
+        # stopped, conflict_files = apply_patch(branch, comm_ci)
+        new_pr_title = "[auto-sync]{}-{}".format(pr.title)
+        labels = get_cherry_pick_pr_labels(pr)
+        for label in labels:
+            baseBranch = version_label_re.match(label).group(0)
+            body = append_cherry_pick_in_msg(repo, pr)
+            new_pr = repo.create_pull(title=new_pr_title, body=body, head=branch, base='release-{}'.format(baseBranch))
+            print(f">>> Create PR: {pr_ref(repo, new_pr)}")
+            time.sleep(2)
+            new_pr = repo.get_pull(new_pr.number)
+            new_pr.add_to_labels('auto-sync-robot')
         # for commit in commits:
     except Exception as e:
       print(">>> Fail to merge PR {}, cause: {}".format(pr.pr_num, e))
-    # return (False, -1 if new_pr is None else new_pr.number)
 
 def main(repo):
     cur_repo = gh.get_repo(repo)
@@ -327,7 +340,7 @@ def main(repo):
     
     need_sync_prs = get_need_sync_prs(cur_repo)
     for pr in need_sync_prs:
-        generate_pr(pr)
+        generate_pr(cur_repo, pr)
     print(">>> {} PRs need to sync".format(len(need_sync_prs)))
     # unmerged_community_commits = find_unmerged_community_commits_in_ent_repo(comm_repo, ent_repo)
     # unmerged_community_commits.reverse()
