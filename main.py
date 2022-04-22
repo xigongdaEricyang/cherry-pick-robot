@@ -100,11 +100,12 @@ def conflict_file_list(lines):
     return [l[len(prefix):] for l in lines if l.startswith(prefix)]
 
 
-def apply_patch(baseBranch, branch, commits):
+def apply_patch(repo, pr, baseBranch, branch, commits):
     print(f">>> Apply patch file to {branch}")
     stopped = False
     comm_ci = commits[0]
     cur_author = comm_ci.author()
+    git = repo.git
     git.config("--local", "user.name", cur_author.name)
     git.config("--local", "user.email", cur_author.email)
     git.clean("-f")
@@ -330,11 +331,12 @@ def generate_pr(repo, pr):
         # commits = pr.get_commits()
         # print(">>> Generate commit: {}".format([commit.sha for commit in commits]))
         new_pr_title = "[auto-sync]{}".format(pr.title)
+        commits = generated_commits(repo, pr)
         labels = get_cherry_pick_pr_labels(pr)
         for label in labels:
             baseBranch = version_label_re.match(label).group(0)
             body = append_cherry_pick_in_msg(repo, pr)
-            stopped, conflict_files = apply_patch(baseBranch, branch, generated_commits(repo, pr))
+            stopped, conflict_files = apply_patch(repo, pr, baseBranch, branch, commits)
             new_pr = repo.create_pull(title=new_pr_title, body=body, head=branch, base='release-{}'.format(baseBranch))
             # print(f">>> Create PR: {pr_link(repo, new_pr)}")
             # time.sleep(2)
