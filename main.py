@@ -316,17 +316,25 @@ def get_need_sync_prs(repo):
     # 
     return [pr for pr in prs if len(get_cherry_pick_pr_labels(pr)) > 0]
 
+def generated_commits(repo, pr):
+    commits = []
+    for ci in pr.get_commits():
+        commit = Commit(repo.get_commit(ci.sha))
+        if commit.is_valid():
+            commits.append(commit)
+    return commits
+
 def generate_pr(repo, pr):
     try:
         branch= "auto-sync-{}-{}".format(pr.title, pr.number)
-        commits = pr.get_commits()
-        print(">>> Generate commit: {}".format([commit.sha for commit in commits]))
+        # commits = pr.get_commits()
+        # print(">>> Generate commit: {}".format([commit.sha for commit in commits]))
         new_pr_title = "[auto-sync]{}".format(pr.title)
         labels = get_cherry_pick_pr_labels(pr)
         for label in labels:
             baseBranch = version_label_re.match(label).group(0)
             body = append_cherry_pick_in_msg(repo, pr)
-            stopped, conflict_files = apply_patch(baseBranch, branch, commits)
+            stopped, conflict_files = apply_patch(baseBranch, branch, generated_commits(repo, pr))
             new_pr = repo.create_pull(title=new_pr_title, body=body, head=branch, base='release-{}'.format(baseBranch))
             # print(f">>> Create PR: {pr_link(repo, new_pr)}")
             # time.sleep(2)
