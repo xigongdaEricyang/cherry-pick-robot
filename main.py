@@ -111,6 +111,7 @@ def apply_patch(baseBranch, branch, commits):
     git.config("--local", "user.email", cur_author.email)
     git.clean("-f")
     git.fetch("origin", baseBranch)
+    git.branch("-D", branch)
     git.checkout("-b", branch, "origin/{}".format(baseBranch))
     git_commit = comm_ci.commit
     conflict_files = []
