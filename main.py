@@ -116,10 +116,10 @@ def apply_patch(baseBranch, branch, commits):
     # except sh.ErrorReturnCode as e:
     #   print(">>> branch {} already exists, err: {}".format(branch, str(e)))
     git.checkout("-b", branch, "origin/{}".format(baseBranch))
-    git_commit = comm_ci.commit
     conflict_files = []
-    for git_commit in commits:
+    for ci in commits:
       try:
+        git_commit = ci.commit
         git('cherry-pick', git_commit.sha)
       except sh.ErrorReturnCode as e:
           err = str(e)
