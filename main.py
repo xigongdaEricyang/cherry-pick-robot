@@ -105,15 +105,14 @@ def apply_patch(baseBranch, branch, commits):
     stopped = False
     comm_ci = commits[0]
     cur_author = comm_ci.author()
-    sh.ls("./", "-al")
     print(">>>> user.name: {}, user.email: {}".format(cur_author.name, cur_author.email))
 
-    # git.config("--local", "user.name", cur_author.name)
-    # git.config("--local", "user.email", cur_author.email)
-    # git.clean("-f")
-    # git.fetch("origin", baseBranch)
-    # git.checkout("-b", branch, "origin/{}".format(baseBranch))
-    # # git_commit = comm_ci.commit
+    git.config("--local", "user.name", cur_author.name)
+    git.config("--local", "user.email", cur_author.email)
+    git.clean("-f")
+    git.fetch("origin", baseBranch)
+    git.checkout("-b", branch, "origin/{}".format(baseBranch))
+    # git_commit = comm_ci.commit
     conflict_files = []
     # for git_commit in commits:
     #   try:
@@ -288,9 +287,9 @@ def get_repo_name(repo):
     return l[1]
 
 
-def add_community_upstream(comm_repo):
-    remote_url = 'https://github.com/{}.git'.format(comm_repo.full_name)
-    remote_name = 'community'
+def add_repo_upstream(repo):
+    remote_url = 'https://github.com/{}.git'.format(repo.full_name)
+    remote_name = 'origin'
 
     try:
         git.remote('-vv')
@@ -391,5 +390,5 @@ def main(repo):
 if __name__ == "__main__":
     cur_repo = os.environ["GITHUB_REPOSITORY"]
     print(">>> From: {}".format(cur_repo))
-    
+    add_repo_upstream(cur_repo)
     main(cur_repo)
