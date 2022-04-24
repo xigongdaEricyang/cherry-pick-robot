@@ -297,6 +297,8 @@ def add_repo_upstream(repo):
 
     try:
         git.init()
+        git.clone(remote_url)
+        sh.cd(repo.name)
         git.remote('-vv')
         git.remote('rm', remote_name)
     except:
