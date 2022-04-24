@@ -329,7 +329,7 @@ def generated_commits(repo, pr):
 
 def generate_pr(repo, pr):
     try:
-        branch= "auto-sync-{}-{}".format(pr.title, pr.number)
+        branch= "auto-sync-{}".format(pr.number)
         # commits = pr.get_commits()
         # print(">>> Generate commit: {}".format([commit.sha for commit in commits]))
         new_pr_title = "[auto-sync]{}".format(pr.number)
