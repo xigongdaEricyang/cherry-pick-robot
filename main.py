@@ -25,6 +25,8 @@ gh_url = "https://github.com"
 token = os.environ['INPUT_REPO_TOKEN']
 gh = Github(token)
 
+print('token: {}'.format(token))
+
 prog = re.compile(r"(.*)\(#(\d+)\)(?:$|\n).*")
 title_re = re.compile(r"(.*)(?:$|\n).*")
 version_label_re = re.compile(r"^v[0-9]*\.[0-9]*")
