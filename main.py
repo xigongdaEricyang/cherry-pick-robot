@@ -100,42 +100,44 @@ def conflict_file_list(lines):
     return [l[len(prefix):] for l in lines if l.startswith(prefix)]
 
 
-def apply_patch(repo, pr, baseBranch, branch, commits):
+def apply_patch(baseBranch, branch, commits):
     print(f">>> Apply patch file to {branch}")
     stopped = False
     comm_ci = commits[0]
     cur_author = comm_ci.author()
-    git = repo.git
-    git.config("--local", "user.name", cur_author.name)
-    git.config("--local", "user.email", cur_author.email)
-    git.clean("-f")
-    git.fetch("origin", baseBranch)
-    git.checkout("-b", branch, "origin/{}".format(baseBranch))
-    # git_commit = comm_ci.commit
-    conflict_files = []
-    for git_commit in commits:
-      try:
-        git('cherry-pick', git_commit.sha)
-      except sh.ErrorReturnCode as e:
-          err = str(e)
-          if err.find('git commit --allow-empty') >= 0:
-              git('commit', '--allow-empty', '--allow-empty-message', '--no-edit')
-          else:
-              print(">>> Fail to apply the patch to branch {}, cause: {}".format(branch, err))
-              if err.find('more, please see e.stdout') >= 0:
-                  err = e.stdout.decode()
-              conflict_files = conflict_file_list(err.splitlines())
-              # git('cherry-pick', '--abort')
-              # overwrite_conflict_files(git_commit)
-              commit_changes(comm_ci)
-              stopped = True
-          
-    try:
-        git.push("-u", "origin", branch)
-    except sh.ErrorReturnCode as e:
-        print(">>> Fail to push branch({}) to origin, caused by {}".format(branch, e))
 
-    return (stopped, conflict_files)
+    print(">>>> user.name: {}, user.email: {}".format(cur_author.name, cur_author.email))
+
+    # git.config("--local", "user.name", cur_author.name)
+    # git.config("--local", "user.email", cur_author.email)
+    # git.clean("-f")
+    # git.fetch("origin", baseBranch)
+    # git.checkout("-b", branch, "origin/{}".format(baseBranch))
+    # # git_commit = comm_ci.commit
+    # conflict_files = []
+    # for git_commit in commits:
+    #   try:
+    #     git('cherry-pick', git_commit.sha)
+    #   except sh.ErrorReturnCode as e:
+    #       err = str(e)
+    #       if err.find('git commit --allow-empty') >= 0:
+    #           git('commit', '--allow-empty', '--allow-empty-message', '--no-edit')
+    #       else:
+    #           print(">>> Fail to apply the patch to branch {}, cause: {}".format(branch, err))
+    #           if err.find('more, please see e.stdout') >= 0:
+    #               err = e.stdout.decode()
+    #           conflict_files = conflict_file_list(err.splitlines())
+    #           # git('cherry-pick', '--abort')
+    #           # overwrite_conflict_files(git_commit)
+    #           commit_changes(comm_ci)
+    #           stopped = True
+          
+    # try:
+    #     git.push("-u", "origin", branch)
+    # except sh.ErrorReturnCode as e:
+    #     print(">>> Fail to push branch({}) to origin, caused by {}".format(branch, e))
+
+    # return (stopped, conflict_files)
 
 
 def find_latest_community_commit_in_ent_repo(ent_commit: Commit, community_commits):
@@ -237,41 +239,41 @@ CONFLICT FILES:
                                         '\n'.join(conflict_files)))
 
 
-def create_pr(comm_repo, ent_repo, comm_ci, org_members):
-    try:
-        merged_pr = comm_repo.get_pull(comm_ci.pr_num)
-        branch = "pr-{}".format(merged_pr.number)
-        stopped, conflict_files = apply_patch(branch, comm_ci)
-        body = append_migration_in_msg(comm_repo, comm_ci, merged_pr)
-        new_pr = ent_repo.create_pull(title=comm_ci.title, body=body, head=branch, base="master")
+# def create_pr(comm_repo, ent_repo, comm_ci, org_members):
+#     try:
+#         merged_pr = comm_repo.get_pull(comm_ci.pr_num)
+#         branch = "pr-{}".format(merged_pr.number)
+#         stopped, conflict_files = apply_patch(branch, comm_ci)
+#         body = append_migration_in_msg(comm_repo, comm_ci, merged_pr)
+#         new_pr = ent_repo.create_pull(title=comm_ci.title, body=body, head=branch, base="master")
 
-        print(f">>> Create PR: {pr_ref(ent_repo, new_pr)}")
-        time.sleep(2)
+#         print(f">>> Create PR: {pr_ref(ent_repo, new_pr)}")
+#         time.sleep(2)
 
-        new_pr = ent_repo.get_pull(new_pr.number)
-        new_pr.add_to_labels('auto-sync')
+#         new_pr = ent_repo.get_pull(new_pr.number)
+#         new_pr.add_to_labels('auto-sync')
 
-        if stopped:
-            notify_author_by_comment(ent_repo,
-                                     comm_repo,
-                                     comm_ci,
-                                     new_pr.number,
-                                     comm_ci.pr_num,
-                                     org_members,
-                                     conflict_files)
-            return (False, new_pr.number)
+#         if stopped:
+#             notify_author_by_comment(ent_repo,
+#                                      comm_repo,
+#                                      comm_ci,
+#                                      new_pr.number,
+#                                      comm_ci.pr_num,
+#                                      org_members,
+#                                      conflict_files)
+#             return (False, new_pr.number)
 
-        if not new_pr.mergeable:
-            return (False, new_pr.number)
+#         if not new_pr.mergeable:
+#             return (False, new_pr.number)
 
-        commit_title = "{} (#{})".format(comm_ci.title, new_pr.number)
-        status = new_pr.merge(merge_method='squash', commit_title=commit_title)
-        if not status.merged:
-            return (False, new_pr.number)
-        return (True, new_pr.number)
-    except Exception as e:
-        print(">>> Fail to merge PR {}, cause: {}".format(comm_ci.pr_num, e))
-        return (False, -1 if new_pr is None else new_pr.number)
+#         commit_title = "{} (#{})".format(comm_ci.title, new_pr.number)
+#         status = new_pr.merge(merge_method='squash', commit_title=commit_title)
+#         if not status.merged:
+#             return (False, new_pr.number)
+#         return (True, new_pr.number)
+#     except Exception as e:
+#         print(">>> Fail to merge PR {}, cause: {}".format(comm_ci.pr_num, e))
+#         return (False, -1 if new_pr is None else new_pr.number)
 
 
 def get_org_name(repo):
@@ -330,13 +332,13 @@ def generate_pr(repo, pr):
         branch= "auto-sync-{}-{}".format(pr.title, pr.number)
         # commits = pr.get_commits()
         # print(">>> Generate commit: {}".format([commit.sha for commit in commits]))
-        new_pr_title = "[auto-sync]{}".format(pr.title)
+        new_pr_title = "[auto-sync]{}".format(pr.number)
         commits = generated_commits(repo, pr)
         labels = get_cherry_pick_pr_labels(pr)
         for label in labels:
             baseBranch = version_label_re.match(label).group(0)
             body = append_cherry_pick_in_msg(repo, pr)
-            stopped, conflict_files = apply_patch(repo, pr, baseBranch, branch, commits)
+            stopped, conflict_files = apply_patch(baseBranch, branch, commits)
             new_pr = repo.create_pull(title=new_pr_title, body=body, head=branch, base='release-{}'.format(baseBranch))
             # print(f">>> Create PR: {pr_link(repo, new_pr)}")
             # time.sleep(2)
