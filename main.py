@@ -292,6 +292,7 @@ def add_repo_upstream(repo):
     remote_name = 'origin'
 
     try:
+        git.init()
         git.remote('-vv')
         git.remote('rm', remote_name)
     except:
