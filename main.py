@@ -111,7 +111,6 @@ def apply_patch(baseBranch, branch, commits):
     git.config("--local", "user.email", cur_author.email)
     git.clean("-f")
     git.fetch("origin", baseBranch)
-    git.branch("-D", branch)
     git.checkout("-b", branch, "origin/{}".format(baseBranch))
     git_commit = comm_ci.commit
     conflict_files = []
@@ -296,6 +295,7 @@ def add_repo_upstream(repo):
         git.init()
         git.remote('-vv')
         git.remote('rm', remote_name)
+        git("branch", "-D", git("branch", "--no-merged"))
     except:
         print(">>> The remote upstream({}) not found.".format(remote_name))
 
@@ -346,7 +346,7 @@ def generate_pr(repo, pr):
             # new_pr = repo.get_pull(new_pr.number)
             # new_pr.add_to_labels('auto-sync-robot')
     except Exception as e:
-      print(">>> Fail to merge PR {}, cause: {}".format(pr.pr_num, e))
+      print(">>> Fail to merge PR {}, cause: {}".format(pr.number, e))
 
 def main(cur_repo):
     # cur_repo = gh.get_repo(repo)
