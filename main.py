@@ -346,8 +346,8 @@ def generate_pr(repo, pr):
     except Exception as e:
       print(">>> Fail to merge PR {}, cause: {}".format(pr.pr_num, e))
 
-def main(repo):
-    cur_repo = gh.get_repo(repo)
+def main(cur_repo):
+    # cur_repo = gh.get_repo(repo)
     # org_members = get_org_members(get_org_name(cur_repo))
     
     need_sync_prs = get_need_sync_prs(cur_repo)
@@ -389,6 +389,7 @@ def main(repo):
 
 if __name__ == "__main__":
     cur_repo = os.environ["GITHUB_REPOSITORY"]
+    repo = gh.get_repo(cur_repo)
     print(">>> From: {}".format(cur_repo))
-    add_repo_upstream(cur_repo)
-    main(cur_repo)
+    add_repo_upstream(repo)
+    main(repo)
