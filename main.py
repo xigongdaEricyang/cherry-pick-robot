@@ -25,8 +25,6 @@ gh_url = "https://github.com"
 token = os.environ['INPUT_REPO_TOKEN']
 gh = Github(token)
 
-print('token: {}'.format(token))
-
 prog = re.compile(r"(.*)\(#(\d+)\)(?:$|\n).*")
 title_re = re.compile(r"(.*)(?:$|\n).*")
 version_label_re = re.compile(r"^v[0-9]*\.[0-9]*")
@@ -107,11 +105,11 @@ def apply_patch(baseBranch, branch, commits):
     stopped = False
     comm_ci = commits[0]
     cur_author = comm_ci.author()
-
+    sh.ls("./", "-al")
     print(">>>> user.name: {}, user.email: {}".format(cur_author.name, cur_author.email))
 
-    git.config("--local", "user.name", cur_author.name)
-    git.config("--local", "user.email", cur_author.email)
+    # git.config("--local", "user.name", cur_author.name)
+    # git.config("--local", "user.email", cur_author.email)
     # git.clean("-f")
     # git.fetch("origin", baseBranch)
     # git.checkout("-b", branch, "origin/{}".format(baseBranch))
