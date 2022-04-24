@@ -111,10 +111,10 @@ def apply_patch(baseBranch, branch, commits):
     git.config("--local", "user.email", cur_author.email)
     git.clean("-f")
     git.fetch("origin", baseBranch)
-    try:
-      git.branch("-D", branch)
-    except sh.ErrorReturnCode as e:
-      print(">>> branch {} already exists, err: {}".format(branch, str(e)))
+    # try:
+    #   git.branch("-D", branch)
+    # except sh.ErrorReturnCode as e:
+    #   print(">>> branch {} already exists, err: {}".format(branch, str(e)))
     git.checkout("-b", branch, "origin/{}".format(baseBranch))
     git_commit = comm_ci.commit
     conflict_files = []
