@@ -108,13 +108,13 @@ def apply_patch(baseBranch, branch, commits):
 
     print(">>>> user.name: {}, user.email: {}".format(cur_author.name, cur_author.email))
 
-    # git.config("--local", "user.name", cur_author.name)
-    # git.config("--local", "user.email", cur_author.email)
+    git.config("--local", "user.name", cur_author.name)
+    git.config("--local", "user.email", cur_author.email)
     # git.clean("-f")
     # git.fetch("origin", baseBranch)
     # git.checkout("-b", branch, "origin/{}".format(baseBranch))
     # # git_commit = comm_ci.commit
-    # conflict_files = []
+    conflict_files = []
     # for git_commit in commits:
     #   try:
     #     git('cherry-pick', git_commit.sha)
@@ -137,7 +137,7 @@ def apply_patch(baseBranch, branch, commits):
     # except sh.ErrorReturnCode as e:
     #     print(">>> Fail to push branch({}) to origin, caused by {}".format(branch, e))
 
-    # return (stopped, conflict_files)
+    return (stopped, conflict_files)
 
 
 def find_latest_community_commit_in_ent_repo(ent_commit: Commit, community_commits):
