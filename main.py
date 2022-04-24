@@ -92,7 +92,7 @@ def commit_changes(ci: Commit):
     author = ci.author()
     print(f">>> Commit changes by <{author.email}>")
     git.add(".")
-    git.commit("-nam", ci.title, "--author", f"{author.name} <{author.email}>")
+    git.commit("-name", ci.title, "--author", f"{author.name} <{author.email}>")
 
 
 def conflict_file_list(lines):
