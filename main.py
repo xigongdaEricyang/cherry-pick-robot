@@ -132,7 +132,7 @@ def apply_patch(baseBranch, branch, commits):
               conflict_files = conflict_file_list(err.splitlines())
               # git('cherry-pick', '--abort')
               # overwrite_conflict_files(git_commit)
-              commit_changes(comm_ci)
+              commit_changes(ci)
               stopped = True
           
     try:
