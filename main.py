@@ -336,10 +336,10 @@ def generate_pr(repo, pr):
         commits = generated_commits(repo, pr)
         labels = get_cherry_pick_pr_labels(pr)
         for label in labels:
-            baseBranch = version_label_re.match(label).group(0)
+            baseBranch = 'release-{}'.format(version_label_re.match(label).group(0))
             body = append_cherry_pick_in_msg(repo, pr)
             stopped, conflict_files = apply_patch(baseBranch, branch, commits)
-            new_pr = repo.create_pull(title=new_pr_title, body=body, head=branch, base='release-{}'.format(baseBranch))
+            new_pr = repo.create_pull(title=new_pr_title, body=body, head=branch, base=baseBranch)
             # print(f">>> Create PR: {pr_link(repo, new_pr)}")
             # time.sleep(2)
             # new_pr = repo.get_pull(new_pr.number)
