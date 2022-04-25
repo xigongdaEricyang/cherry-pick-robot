@@ -111,10 +111,6 @@ def apply_patch(baseBranch, branch, commits):
     git.config("--local", "user.email", cur_author.email)
     git.clean("-f")
     git.fetch("origin", baseBranch)
-    # try:
-    #   git.branch("-D", branch)
-    # except sh.ErrorReturnCode as e:
-    #   print(">>> branch {} already exists, err: {}".format(branch, str(e)))
     git.checkout("-b", branch, "origin/{}".format(baseBranch))
     conflict_files = []
     for ci in commits:
@@ -130,8 +126,6 @@ def apply_patch(baseBranch, branch, commits):
               if err.find('more, please see e.stdout') >= 0:
                   err = e.stdout.decode()
               conflict_files = conflict_file_list(err.splitlines())
-              # git('cherry-pick', '--abort')
-              # overwrite_conflict_files(git_commit)
               commit_changes(ci)
               stopped = True
           
