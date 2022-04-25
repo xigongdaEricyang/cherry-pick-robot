@@ -29,8 +29,9 @@ prog = re.compile(r"(.*)\(#(\d+)\)(?:$|\n).*")
 title_re = re.compile(r"(.*)(?:$|\n).*")
 version_label_re = re.compile(r"^v[0-9]*\.[0-9]*")
 
+
 class Commit:
-    def __init__(self, commit = None):
+    def __init__(self, commit=None):
         self.commit = commit
         self.title = None
         self.pr_num = -1
@@ -92,7 +93,7 @@ def commit_changes(ci: Commit):
     author = ci.author()
     print(f">>> Commit changes by <{author.email}>")
     git.add(".")
-    git.commit("-name", ci.title, "--author", f"{author.name} <{author.email}>")
+    git.commit("-nam", ci.title, "--author", f"{author.name} <{author.email}>")
 
 
 def conflict_file_list(lines):
@@ -105,30 +106,35 @@ def apply_patch(baseBranch, branch, commits):
     stopped = False
     comm_ci = commits[0]
     cur_author = comm_ci.author()
-    print(">>>> user.name: {}, user.email: {}".format(cur_author.name, cur_author.email))
+    print(">>>> user.name: {}, user.email: {}".format(
+        cur_author.name, cur_author.email))
 
     git.config("--local", "user.name", cur_author.name)
     git.config("--local", "user.email", cur_author.email)
     git.clean("-f")
     git.fetch("origin", baseBranch)
     git.checkout("-b", branch, "origin/{}".format(baseBranch))
+    if os.environ["INPUT_SUBMODULE"] == True:
+        git.submodule("foreach", "git", "reset", "--hard")
     conflict_files = []
     for ci in commits:
-      try:
-        git_commit = ci.commit
-        git('cherry-pick', git_commit.sha)
-      except sh.ErrorReturnCode as e:
-          err = str(e)
-          if err.find('git commit --allow-empty') >= 0:
-              git('commit', '--allow-empty', '--allow-empty-message', '--no-edit')
-          else:
-              print(">>> Fail to apply the patch to branch {}, cause: {}".format(branch, err))
-              if err.find('more, please see e.stdout') >= 0:
-                  err = e.stdout.decode()
-              conflict_files = conflict_file_list(err.splitlines())
-              commit_changes(ci)
-              stopped = True
-          
+        try:
+            git_commit = ci.commit
+            git('cherry-pick', git_commit.sha)
+        except sh.ErrorReturnCode as e:
+            err = str(e)
+            if err.find('git commit --allow-empty') >= 0:
+                git('commit', '--allow-empty',
+                    '--allow-empty-message', '--no-edit')
+            else:
+                print(">>> Fail to apply the patch to branch {}, cause: {}".format(
+                    branch, err))
+                if err.find('more, please see e.stdout') >= 0:
+                    err = e.stdout.decode()
+                conflict_files = conflict_file_list(err.splitlines())
+                commit_changes(ci)
+                stopped = True
+
     try:
         git.push("-u", "origin", branch)
     except sh.ErrorReturnCode as e:
@@ -146,7 +152,8 @@ def find_latest_community_commit_in_ent_repo(ent_commit: Commit, community_commi
             if ent_commit.login() == user:
                 return ci
             else:
-                print(">>> [WARN] the commit has been checkin by {} rather than {}: {}".format(ent_commit.login(), user, ent_commit.title))
+                print(">>> [WARN] the commit has been checkin by {} rather than {}: {}".format(
+                    ent_commit.login(), user, ent_commit.title))
     return Commit()
 
 
@@ -165,7 +172,8 @@ def find_unmerged_community_commits_in_ent_repo(community_repo, ent_repo):
     ent_commits = generate_latest_100_commits(ent_repo)
     community_commits = generate_latest_100_commits(community_repo)
     for ent_commit in ent_commits:
-        ci = find_latest_community_commit_in_ent_repo(ent_commit, community_commits)
+        ci = find_latest_community_commit_in_ent_repo(
+            ent_commit, community_commits)
         if ci.is_valid():
             return community_commits[:community_commits.index(ci)]
     return []
@@ -192,9 +200,11 @@ def append_migration_in_msg(repo, ci, pr):
     coauthor = co_authored_by(ci.author())
     return "{}\n\nMigrated from {}\n\n{}\n".format(body, pr_ref(repo, pr), coauthor)
 
+
 def append_cherry_pick_in_msg(repo, pr):
     body = pr.body if pr.body else ""
     return "{}\n\Cherry-pick from {}\n\n".format(body, pr_link(repo, pr))
+
 
 def notify_author_by_comment(ent_repo, comm_repo, comm_ci, issue_num, comm_pr_num, org_members, conflict_files):
     comment = ""
@@ -202,7 +212,8 @@ def notify_author_by_comment(ent_repo, comm_repo, comm_ci, issue_num, comm_pr_nu
         comment += f"@{comm_ci.login()}\n"
         print(f">>> Notify the author by comment: {comm_ci.login()}")
     else:
-        print(f">>> The author {comm_ci.login()} is not in the orgnization, need not to notify him")
+        print(
+            f">>> The author {comm_ci.login()} is not in the orgnization, need not to notify him")
 
     comment += """This PR will cause conflicts when applying patch.
 Please carefully compare all the changes in this PR to avoid overwriting legal codes.
@@ -302,19 +313,22 @@ def add_repo_upstream(repo):
         print(">>> Fail to add remote, cause: {}".format(e))
         raise
 
+
 def get_cherry_pick_pr_labels(pr):
     prLabelRegex = re.compile(r"^v[0-9]*\.[0-9]*-cherry-pick$")
     title = pr.title
     pr_labels = pr.get_labels()
-    labels = [label.name for label in pr_labels if prLabelRegex.match(label.name)]
+    labels = [
+        label.name for label in pr_labels if prLabelRegex.match(label.name)]
     return labels
 
 
-
 def get_need_sync_prs(repo):
-    prs = repo.get_pulls(state='open', sort='updated', direction='desc', base='master')
-    # 
+    prs = repo.get_pulls(state='open', sort='updated',
+                         direction='desc', base='master')
+    #
     return [pr for pr in prs if len(get_cherry_pick_pr_labels(pr)) > 0]
+
 
 def generated_commits(repo, pr):
     commits = []
@@ -324,30 +338,34 @@ def generated_commits(repo, pr):
             commits.append(commit)
     return commits
 
+
 def generate_pr(repo, pr):
     try:
-        branch= "auto-sync-{}".format(pr.number)
+        branch = "auto-sync-{}".format(pr.number)
         # commits = pr.get_commits()
         # print(">>> Generate commit: {}".format([commit.sha for commit in commits]))
         new_pr_title = "[auto-sync]{}".format(pr.number)
         commits = generated_commits(repo, pr)
         labels = get_cherry_pick_pr_labels(pr)
         for label in labels:
-            baseBranch = 'release-{}'.format(version_label_re.match(label).group(0))
+            baseBranch = 'release-{}'.format(
+                version_label_re.match(label).group(0))
             body = append_cherry_pick_in_msg(repo, pr)
             stopped, conflict_files = apply_patch(baseBranch, branch, commits)
-            new_pr = repo.create_pull(title=new_pr_title, body=body, head=branch, base=baseBranch)
+            new_pr = repo.create_pull(
+                title=new_pr_title, body=body, head=branch, base=baseBranch)
             print(f">>> Create PR: {pr_link(repo, new_pr)}")
             time.sleep(2)
             new_pr = repo.get_pull(new_pr.number)
             new_pr.add_to_labels('auto-sync-robot')
     except Exception as e:
-      print(">>> Fail to merge PR {}, cause: {}".format(pr.number, e))
+        print(">>> Fail to merge PR {}, cause: {}".format(pr.number, e))
+
 
 def main(cur_repo):
     # cur_repo = gh.get_repo(repo)
     # org_members = get_org_members(get_org_name(cur_repo))
-    
+
     need_sync_prs = get_need_sync_prs(cur_repo)
     for pr in need_sync_prs:
         generate_pr(cur_repo, pr)
