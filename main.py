@@ -102,8 +102,13 @@ def conflict_file_list(lines):
 
 def update_submodule(submodule_path):
     print(">>> INPUT_SUBMODULE_PATH111: {}".format(submodule_path))
-    git.checkout("-q")
-    git.submodule("update", "--", submodule_path)
+    try:
+      git.checkout("-q")
+      git.submodule("update", "--", submodule_path)
+    except sh.ErrorReturnCode as e:
+      err = str(e)
+      print(">>> Fail to aupdate_submodule {}, cause: {}".format(
+                    submodule_path, err))
 
 def apply_patch(baseBranch, branch, commits):
     print(f">>> Apply patch file to {branch}")
