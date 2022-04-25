@@ -102,12 +102,12 @@ def conflict_file_list(lines):
 
 def update_submodule(submodule_path):
     git.checkout("-q")
-    git.submodule("update", submodule_path)
+    git.submodule("update", "--", submodule_path)
 
 def apply_patch(baseBranch, branch, commits):
     print(f">>> Apply patch file to {branch}")
     stopped = False
-    comm_ci = commits[0]
+    comm_ci = commits[0] 
     cur_author = comm_ci.author()
     print(">>>> user.name: {}, user.email: {}".format(
         cur_author.name, cur_author.email))
