@@ -101,6 +101,7 @@ def conflict_file_list(lines):
     return [l[len(prefix):] for l in lines if l.startswith(prefix)]
 
 def update_submodule(submodule_path):
+    print(">>> INPUT_SUBMODULE_PATH111: {}".format(submodule_path))
     git.checkout("-q")
     git.submodule("update", "--", submodule_path)
 
@@ -117,7 +118,6 @@ def apply_patch(baseBranch, branch, commits):
     git.clean("-f")
     git.fetch("origin", baseBranch)
     git.checkout("-b", branch, "origin/{}".format(baseBranch))
-    print(">>> INPUT_SUBMODULE_PATH: {}".format(os.environ["INPUT_SUBMODULE_PATH"]))
     submodule_path = os.environ["INPUT_SUBMODULE_PATH"]
     if submodule_path:
       update_submodule(submodule_path)
