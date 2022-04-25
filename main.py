@@ -114,8 +114,9 @@ def apply_patch(baseBranch, branch, commits):
     git.clean("-f")
     git.fetch("origin", baseBranch)
     git.checkout("-b", branch, "origin/{}".format(baseBranch))
+    print(">>> is true: {}".format(os.environ["INPUT_SUBMODULE"] == True))
     if os.environ["INPUT_SUBMODULE"] == True:
-        git.submodule("foreach", "git", "reset", "--hard")
+        git("submodule", "foreach", "git", "reset", "--hard")
     conflict_files = []
     for ci in commits:
         try:
