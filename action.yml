@@ -11,7 +11,7 @@ inputs:
   pr_label:
     description: 'which label to auto create pr'
     required: true
-  submodule:
+  submodule_path:
     description: 'Does repo contain submodule '
     required: false
 runs:

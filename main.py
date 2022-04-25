@@ -100,6 +100,9 @@ def conflict_file_list(lines):
     prefix = "CONFLICT (content): Merge conflict in "
     return [l[len(prefix):] for l in lines if l.startswith(prefix)]
 
+def update_submodule(submodule_path):
+    git.checkout("-q")
+    git.submodule("update", submodule_path)
 
 def apply_patch(baseBranch, branch, commits):
     print(f">>> Apply patch file to {branch}")
@@ -114,9 +117,10 @@ def apply_patch(baseBranch, branch, commits):
     git.clean("-f")
     git.fetch("origin", baseBranch)
     git.checkout("-b", branch, "origin/{}".format(baseBranch))
-    print(">>> is true: {}".format(os.environ["INPUT_SUBMODULE"] == True))
-    if os.environ["INPUT_SUBMODULE"] == True:
-        git("submodule", "foreach", "git", "reset", "--hard")
+    print(">>> INPUT_SUBMODULE_PATH: {}".format(os.environ["INPUT_SUBMODULE_PATH"]))
+    submodule_path = os.environ["INPUT_SUBMODULE_PATH"]
+    if submodule_path:
+      update_submodule(submodule_path)
     conflict_files = []
     for ci in commits:
         try:
