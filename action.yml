@@ -11,6 +11,9 @@ inputs:
   pr_label:
     description: 'which label to auto create pr'
     required: true
+  submodule:
+    description: 'Does repo contain submodule '
+    required: false
 runs:
   using: "docker"
   image: "Dockerfile"
