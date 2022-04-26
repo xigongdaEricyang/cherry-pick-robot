@@ -127,24 +127,23 @@ def apply_patch(baseBranch, branch, commits):
     if submodule_path:
       update_submodule(submodule_path)
     conflict_files = []
-    for ci in commits:
-        try:
-            git_commit = ci.commit
-            time.sleep(300000)
-            git('cherry-pick', git_commit.sha)
-        except sh.ErrorReturnCode as e:
-            err = str(e)
-            if err.find('git commit --allow-empty') >= 0:
-                git('commit', '--allow-empty',
-                    '--allow-empty-message', '--no-edit')
-            else:
-                print(">>> Fail to apply the patch to branch {}, cause: {}".format(
-                    branch, err))
-                if err.find('more, please see e.stdout') >= 0:
-                    err = e.stdout.decode()
-                conflict_files = conflict_file_list(err.splitlines())
-                commit_changes(ci)
-                stopped = True
+    try:
+        # time.sleep(300000)
+        git('cherry-pick', *[ci.commit.sha for ci in commits])
+    except sh.ErrorReturnCode as e:
+        err = str(e)
+        if err.find('git commit --allow-empty') >= 0:
+            git('commit', '--allow-empty',
+                '--allow-empty-message', '--no-edit')
+        else:
+            print(">>> Fail to apply the patch to branch {}, cause: {}".format(
+                branch, err))
+            if err.find('more, please see e.stdout') >= 0:
+                err = e.stdout.decode()
+            conflict_files = conflict_file_list(err.splitlines())
+            commit_changes(ci)
+            stopped = True
+        
 
     try:
         git.push("-u", "origin", branch)
@@ -312,13 +311,14 @@ def add_repo_upstream(repo):
     remote_name = 'origin'
 
     try:
-        # git.init()
-        git.remote('-vv')
-        git.remote('rm', remote_name)
+        git.clone(remote_url)
+        sh.cd(repo.name)
+        # git.remote('-vv')
+        # git.remote('rm', remote_name)
     except:
         print(">>> The remote upstream({}) not found.".format(remote_name))
     try:
-        git.remote('add', remote_name, remote_url)
+        # git.remote('add', remote_name, remote_url)
         git.fetch(remote_name, 'master')
     except Exception as e:
         print(">>> Fail to add remote, cause: {}".format(e))
