@@ -365,7 +365,8 @@ def generate_pr(repo, pr):
             new_pr = repo.create_pull(
                 title=new_pr_title, body=body, head=branch, base=baseBranch)
             print(f">>> Create PR: {pr_link(repo, new_pr)}")
-            time.sleep(2)
+            # time.sleep(2)
+            time.sleep(300000)
             new_pr = repo.get_pull(new_pr.number)
             new_pr.add_to_labels('auto-sync-robot')
     except Exception as e:
