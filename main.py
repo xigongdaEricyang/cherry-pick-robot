@@ -417,6 +417,5 @@ if __name__ == "__main__":
     cur_repo = os.environ["GITHUB_REPOSITORY"]
     repo = gh.get_repo(cur_repo)
     print(">>> From: {}".format(cur_repo))
-    time.sleep(300000)
     add_repo_upstream(repo)
     main(repo)
