@@ -113,8 +113,8 @@ def update_submodule(submodule_path):
 def add_remote_url(repo):
     remote_url = 'https://github.com/{}.git'.format(repo.full_name)
     try:
-      remote_name = repo.organization.name
-      print(">>> remote_name, {}".format(remote_name))
+      remote_name = repo.owner.login
+      print(">>> remote_name, {}, {}".format(repo.owner, remote_name))
       # git.remote("add", remote_name, remote_url)
       # git.fetch(remote_name)
     except Exception as e:
