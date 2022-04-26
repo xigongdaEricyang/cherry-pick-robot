@@ -130,6 +130,7 @@ def apply_patch(baseBranch, branch, commits):
     for ci in commits:
         try:
             git_commit = ci.commit
+            time.sleep(300000)
             git('cherry-pick', git_commit.sha)
         except sh.ErrorReturnCode as e:
             err = str(e)
@@ -146,7 +147,6 @@ def apply_patch(baseBranch, branch, commits):
                 stopped = True
 
     try:
-        # time.sleep(300000)
         git.push("-u", "origin", branch)
     except sh.ErrorReturnCode as e:
         print(">>> Fail to push branch({}) to origin, caused by {}".format(branch, e))
@@ -363,7 +363,7 @@ def generate_pr(repo, pr):
             baseBranch = 'release-{}'.format(
                 version_label_re.match(label).group(0)[1:])
             body = append_cherry_pick_in_msg(repo, pr)
-            # stopped, conflict_files = apply_patch(baseBranch, branch, commits)
+            stopped, conflict_files = apply_patch(baseBranch, branch, commits)
             # new_pr = repo.create_pull(
             #     title=new_pr_title, body=body, head=branch, base=baseBranch)
             # print(f">>> Create PR: {pr_link(repo, new_pr)}")
