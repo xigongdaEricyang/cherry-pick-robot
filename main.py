@@ -146,7 +146,7 @@ def apply_patch(baseBranch, branch, commits):
         
 
     try:
-        git.push("-u", "origin", branch)
+        git.push("-u", "origin", branch, "-f")
     except sh.ErrorReturnCode as e:
         print(">>> Fail to push branch({}) to origin, caused by {}".format(branch, e))
 
