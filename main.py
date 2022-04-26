@@ -121,7 +121,7 @@ def apply_patch(baseBranch, branch, commits):
     git.config("--local", "user.name", cur_author.name)
     git.config("--local", "user.email", cur_author.email)
     git.clean("-f")
-    git.fetch("origin", baseBranch)
+    git.fetch("origin")
     git.checkout("-b", branch, "origin/{}".format(baseBranch))
     submodule_path = os.environ["INPUT_SUBMODULE_PATH"]
     if submodule_path:
