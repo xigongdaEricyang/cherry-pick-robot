@@ -359,7 +359,7 @@ def generate_pr(repo, pr):
         labels = get_cherry_pick_pr_labels(pr)
         for label in labels:
             baseBranch = 'release-{}'.format(
-                version_label_re.match(label).group(0))
+                version_label_re.match(label).group(0)[1:])
             body = append_cherry_pick_in_msg(repo, pr)
             stopped, conflict_files = apply_patch(baseBranch, branch, commits)
             new_pr = repo.create_pull(
