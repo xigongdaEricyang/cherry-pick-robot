@@ -110,7 +110,18 @@ def update_submodule(submodule_path):
       print(">>> Fail to aupdate_submodule {}, cause: {}".format(
                     submodule_path, err))
 
-def apply_patch(baseBranch, branch, commits):
+def add_remote_url(repo):
+    remote_url = 'https://github.com/{}.git'.format(repo.full_name)
+    try:
+      remote_name = repo.owner.name
+      print(">>> remote_name, {}".format(remote_name))
+      # git.remote("add", remote_name, remote_url)
+      # git.fetch(remote_name)
+    except Exception as e:
+      print(">>> Fail to get remote_name, cause{}".format(str(e)))
+    
+
+def apply_patch(pr, baseBranch, branch, commits):
     print(f">>> Apply patch file to {branch}")
     stopped = False
     comm_ci = commits[0] 
@@ -126,6 +137,8 @@ def apply_patch(baseBranch, branch, commits):
     submodule_path = os.environ["INPUT_SUBMODULE_PATH"]
     if submodule_path:
       update_submodule(submodule_path)
+    if pr.base.repo.full_name != pr.head.repo.full_name:
+      add_remote_url(pr.head.repo)
     conflict_files = []
     try:
         git('cherry-pick', *[ci.commit.sha for ci in commits])
@@ -352,22 +365,22 @@ def generated_commits(repo, pr):
 def generate_pr(repo, pr):
     try:
         print("<<< head: {}, {}".format(pr.head.repo, pr.head.ref))
-        # branch = "auto-sync-{}".format(pr.number)
-        # new_pr_title = "[auto-sync]{}".format(pr.number)
-        # commits = generated_commits(repo, pr)
-        # labels = get_cherry_pick_pr_labels(pr)
-        # print(">>> commits: {}".format([ci.commit.sha for ci in commits]))
-        # for label in labels:
-        #     baseBranch = 'release-{}'.format(
-        #         version_label_re.match(label).group(0)[1:])
-        #     body = append_cherry_pick_in_msg(repo, pr)
-        #     stopped, conflict_files = apply_patch(baseBranch, branch, commits)
-        #     new_pr = repo.create_pull(
-        #         title=new_pr_title, body=body, head=branch, base=baseBranch)
-        #     print(f">>> Create PR: {pr_link(repo, new_pr)}")
-        #     time.sleep(2)
-        #     new_pr = repo.get_pull(new_pr.number)
-        #     new_pr.add_to_labels('auto-sync-robot')
+        branch = "auto-sync-{}".format(pr.number)
+        new_pr_title = "[auto-sync]{}".format(pr.number)
+        commits = generated_commits(repo, pr)
+        labels = get_cherry_pick_pr_labels(pr)
+        print(">>> commits: {}".format([ci.commit.sha for ci in commits]))
+        for label in labels:
+            baseBranch = 'release-{}'.format(
+                version_label_re.match(label).group(0)[1:])
+            body = append_cherry_pick_in_msg(repo, pr)
+            stopped, conflict_files = apply_patch(pr, baseBranch, branch, commits)
+            new_pr = repo.create_pull(
+                title=new_pr_title, body=body, head=branch, base=baseBranch)
+            print(f">>> Create PR: {pr_link(repo, new_pr)}")
+            time.sleep(2)
+            new_pr = repo.get_pull(new_pr.number)
+            new_pr.add_to_labels('auto-sync-robot')
     except Exception as e:
         print(">>> Fail to merge PR {}, cause: {}".format(pr.number, e))
 
