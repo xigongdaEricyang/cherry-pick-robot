@@ -146,7 +146,7 @@ def apply_patch(baseBranch, branch, commits):
                 stopped = True
 
     try:
-        # time.sleep(300000)
+        time.sleep(300000)
         git.push("-u", "origin", branch)
     except sh.ErrorReturnCode as e:
         print(">>> Fail to push branch({}) to origin, caused by {}".format(branch, e))
@@ -214,7 +214,7 @@ def append_migration_in_msg(repo, ci, pr):
 
 def append_cherry_pick_in_msg(repo, pr):
     body = pr.body if pr.body else ""
-    return "{}\n\Cherry-pick from {}\n\n".format(body, pr_link(repo, pr))
+    return "{}\nCherry-pick from {}\n\n".format(body, pr_link(repo, pr))
 
 
 def notify_author_by_comment(ent_repo, comm_repo, comm_ci, issue_num, comm_pr_num, org_members, conflict_files):
