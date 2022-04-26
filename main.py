@@ -146,7 +146,7 @@ def apply_patch(baseBranch, branch, commits):
                 stopped = True
 
     try:
-        git.push("-u", "origin", branch)
+        git.push("--set-upstream", "origin", branch)
     except sh.ErrorReturnCode as e:
         print(">>> Fail to push branch({}) to origin, caused by {}".format(branch, e))
 
