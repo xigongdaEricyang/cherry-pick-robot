@@ -364,12 +364,12 @@ def generate_pr(repo, pr):
                 version_label_re.match(label).group(0)[1:])
             body = append_cherry_pick_in_msg(repo, pr)
             stopped, conflict_files = apply_patch(baseBranch, branch, commits)
-            # new_pr = repo.create_pull(
-            #     title=new_pr_title, body=body, head=branch, base=baseBranch)
-            # print(f">>> Create PR: {pr_link(repo, new_pr)}")
-            # time.sleep(2)
-            # new_pr = repo.get_pull(new_pr.number)
-            # new_pr.add_to_labels('auto-sync-robot')
+            new_pr = repo.create_pull(
+                title=new_pr_title, body=body, head=branch, base=baseBranch)
+            print(f">>> Create PR: {pr_link(repo, new_pr)}")
+            time.sleep(2)
+            new_pr = repo.get_pull(new_pr.number)
+            new_pr.add_to_labels('auto-sync-robot')
     except Exception as e:
         print(">>> Fail to merge PR {}, cause: {}".format(pr.number, e))
 
