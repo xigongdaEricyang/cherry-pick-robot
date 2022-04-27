@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import datetime
 from email.mime import base
 import os
 import re
@@ -11,6 +10,7 @@ from pathlib import Path
 from github import Github
 # from dingtalkchatbot.chatbot import DingtalkChatbot
 from sh import git
+from datetime import datetime
 
 
 # dingtalk_access_token = os.environ["INPUT_DINGTALK_ACCESS_TOKEN"]
@@ -351,8 +351,11 @@ def get_cherry_pick_pr_labels(pr):
 def get_need_sync_prs(repo):
     prs = repo.get_pulls(state='merged', sort='updated',
                          direction='desc', base='release-master', per_page=100)
-    #
-    return [pr for pr in prs if len(get_cherry_pick_pr_labels(pr)) > 0 and pr.merged_at > datetime.datetime.today().strftime('%Y-%m-%d')]
+    print(f">>> Get merged PRs: {[pr.title for pr in prs]}")
+    print(f">>> today datetime: {datetime.utcnow().date()}")
+    today = datetime.utcnow().date()
+    startDay = datetime(today.year, today.month, today.day)
+    return [pr for pr in prs if len(get_cherry_pick_pr_labels(pr)) > 0 and  pr.merged_at > startDay]
 
 
 def generated_commits(repo, pr):
