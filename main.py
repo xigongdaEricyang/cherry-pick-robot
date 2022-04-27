@@ -412,7 +412,7 @@ def main(cur_repo):
     for pr in need_sync_prs:
         res = generate_pr(cur_repo, pr)
         md = pr_link(cur_repo, pr)
-        if res[1] >= 0:
+        if res[1].number >= 0:
             md += " -> " + pr_link(cur_repo, res[1])
         if res[0]:
             succ_pr_list.append(md)
