@@ -413,14 +413,15 @@ def main(cur_repo):
     for pr in need_sync_prs:
         res = generate_pr(cur_repo, pr)
         md = pr_link(cur_repo, pr)
-        if res[1].number >= 0:
-            md += " -> " + pr_link(cur_repo, res[1])
-        if res[0]:
-            succ_pr_list.append(md)
-            print(f">>> {pr_ref(cur_repo, res[1])} has been migrated from {pr_ref(cur_repo, pr)}")
-        else:
-            err_pr_list.append(md)
-            print(f">>> {pr_ref(cur_repo, pr)} could not be merged into {pr_ref(cur_repo, res[1])}")
+        if res is not None:
+          if res[1].number >= 0:
+              md += " -> " + pr_link(cur_repo, res[1])
+          if res[0]:
+              succ_pr_list.append(md)
+              print(f">>> {pr_ref(cur_repo, res[1])} has been migrated from {pr_ref(cur_repo, pr)}")
+          else:
+              err_pr_list.append(md)
+              print(f">>> {pr_ref(cur_repo, pr)} could not be merged into {pr_ref(cur_repo, res[1])}")
     print(">>> {} PRs need to sync".format(len(need_sync_prs)))
     # unmerged_community_commits = find_unmerged_community_commits_in_ent_repo(comm_repo, ent_repo)
     # unmerged_community_commits.reverse()
