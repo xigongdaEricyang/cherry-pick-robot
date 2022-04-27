@@ -140,8 +140,8 @@ def apply_patch(pr, baseBranch, branch, commits):
     submodule_path = os.environ["INPUT_SUBMODULE_PATH"]
     if submodule_path:
       update_submodule(submodule_path)
-    # if pr.base.repo.full_name != pr.head.repo.full_name:
-    #   add_remote_url(pr.head.repo)
+    if pr.base.repo.full_name != pr.head.repo.full_name:
+      add_remote_url(pr.head.repo)
     conflict_files = []
     try:
         git('cherry-pick', *[ci.commit.sha for ci in commits])
@@ -406,6 +406,7 @@ def main(cur_repo):
     # org_members = get_org_members(get_org_name(cur_repo))
 
     need_sync_prs = get_need_sync_prs(cur_repo)
+    print(f">>> Need Sync PRs: {[pr.title for pr in need_sync_prs]}")
     succ_pr_list = []
     err_pr_list = []
     for pr in need_sync_prs:
