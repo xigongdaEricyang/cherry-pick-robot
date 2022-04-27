@@ -118,7 +118,7 @@ def add_remote_url(repo):
     try:
       remote_name = repo.owner.login
       # print(">>> remote_name, {}, {}".format(repo.owner, remote_name))
-      git.remote('rm', remote_name)
+      # git.remote('rm', remote_name)
       git.remote("add", remote_name, remote_url)
       git.fetch(remote_name)
     except Exception as e:
