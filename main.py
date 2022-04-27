@@ -395,7 +395,7 @@ def generate_pr(repo, pr):
               status = new_pr.merge(merge_method='squash', commit_title=commit_title)
               if not status.merged:
                   return (False, new_pr)
-              return (True, new_pr)
+            return (True, new_pr)
             
     except Exception as e:
         print(">>> Fail to merge PR {}, cause: {}".format(pr.number, e))
