@@ -10,6 +10,10 @@ inputs:
     required: true
   pr_label:
     description: 'which label to auto create pr'
+    default: '^v[0-9]*\.[0-9]*-cherry-pick$'
+    required: true
+  auto_merge:
+    description: 'Should auto merge when creating the new pr?'
     required: true
   submodule_path:
     description: 'Does repo contain submodule '

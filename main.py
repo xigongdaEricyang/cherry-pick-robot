@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import datetime
 from email.mime import base
 import os
 import re
@@ -23,6 +24,8 @@ from sh import git
 gh_url = "https://github.com"
 
 token = os.environ['INPUT_REPO_TOKEN']
+should_auto_merge = os.environ['INPUT_AUTO_MERGE']
+label_regex = os.environ['INPUT_PR_LABEL']
 gh = Github(token)
 
 prog = re.compile(r"(.*)\(#(\d+)\)(?:$|\n).*")
@@ -137,8 +140,8 @@ def apply_patch(pr, baseBranch, branch, commits):
     submodule_path = os.environ["INPUT_SUBMODULE_PATH"]
     if submodule_path:
       update_submodule(submodule_path)
-    if pr.base.repo.full_name != pr.head.repo.full_name:
-      add_remote_url(pr.head.repo)
+    # if pr.base.repo.full_name != pr.head.repo.full_name:
+    #   add_remote_url(pr.head.repo)
     conflict_files = []
     try:
         git('cherry-pick', *[ci.commit.sha for ci in commits])
@@ -338,8 +341,7 @@ def add_repo_upstream(repo):
 
 
 def get_cherry_pick_pr_labels(pr):
-    prLabelRegex = re.compile(r"^v[0-9]*\.[0-9]*-cherry-pick$")
-    title = pr.title
+    prLabelRegex = re.compile(label_regex)
     pr_labels = pr.get_labels()
     labels = [
         label.name for label in pr_labels if prLabelRegex.match(label.name)]
@@ -347,10 +349,10 @@ def get_cherry_pick_pr_labels(pr):
 
 
 def get_need_sync_prs(repo):
-    prs = repo.get_pulls(state='open', sort='updated',
-                         direction='desc', base='master')
+    prs = repo.get_pulls(state='merged', sort='updated',
+                         direction='desc', base='release-master', per_page=100)
     #
-    return [pr for pr in prs if len(get_cherry_pick_pr_labels(pr)) > 0]
+    return [pr for pr in prs if len(get_cherry_pick_pr_labels(pr)) > 0 and pr.merged_at > datetime.datetime.today().strftime('%Y-%m-%d')]
 
 
 def generated_commits(repo, pr):
@@ -365,7 +367,7 @@ def generated_commits(repo, pr):
 def generate_pr(repo, pr):
     try:
         print("<<< head: {}, {}".format(pr.head.repo, pr.head.ref))
-        branch = "auto-sync-{}".format(pr.number)
+        branch = "auto-sync-{}".format(pr.title)
         new_pr_title = "[auto-sync]{}".format(pr.number)
         commits = generated_commits(repo, pr)
         labels = get_cherry_pick_pr_labels(pr)
@@ -381,6 +383,17 @@ def generate_pr(repo, pr):
             time.sleep(2)
             new_pr = repo.get_pull(new_pr.number)
             new_pr.add_to_labels('auto-sync-robot')
+            if stopped:
+              return (False, new_pr)
+            if not new_pr.mergeable:
+              return (False, new_pr)
+            if should_auto_merge == 'true':
+              commit_title = "{} (#{})".format(commits[0].commit.title, new_pr.number)
+              status = new_pr.merge(merge_method='squash', commit_title=commit_title)
+              if not status.merged:
+                  return (False, new_pr)
+              return (True, new_pr)
+            
     except Exception as e:
         print(">>> Fail to merge PR {}, cause: {}".format(pr.number, e))
 
@@ -390,8 +403,19 @@ def main(cur_repo):
     # org_members = get_org_members(get_org_name(cur_repo))
 
     need_sync_prs = get_need_sync_prs(cur_repo)
+    succ_pr_list = []
+    err_pr_list = []
     for pr in need_sync_prs:
-        generate_pr(cur_repo, pr)
+        res = generate_pr(cur_repo, pr)
+        md = pr_link(cur_repo, pr)
+        if res[1] >= 0:
+            md += " -> " + pr_link(cur_repo, res[1])
+        if res[0]:
+            succ_pr_list.append(md)
+            print(f">>> {pr_ref(cur_repo, res[1])} has been migrated from {pr_ref(cur_repo, pr)}")
+        else:
+            err_pr_list.append(md)
+            print(f">>> {pr_ref(cur_repo, pr)} could not be merged into {pr_ref(cur_repo, res[1])}")
     print(">>> {} PRs need to sync".format(len(need_sync_prs)))
     # unmerged_community_commits = find_unmerged_community_commits_in_ent_repo(comm_repo, ent_repo)
     # unmerged_community_commits.reverse()
