@@ -370,8 +370,8 @@ def generated_commits(repo, pr):
 def generate_pr(repo, pr):
     try:
         print("<<< head: {}, {}".format(pr.head.repo, pr.head.ref))
-        branch = "auto-sync-{}".format(pr.title)
-        new_pr_title = "[auto-sync]{}".format(pr.number)
+        branch = "auto-sync-{}".format(pr.number)
+        new_pr_title = "[auto-sync]{}".format(pr.title)
         commits = generated_commits(repo, pr)
         labels = get_cherry_pick_pr_labels(pr)
         print(">>> commits: {}".format([ci.commit.sha for ci in commits]))
