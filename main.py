@@ -371,9 +371,9 @@ def generated_commits(repo, pr):
 
 def generate_pr(repo, pr, label):
     try:
-        branch = "auto-sync-{}".format(pr.number)
         baseBranch = 'release-{}'.format(
             version_label_re.match(label).group(0)[1:])
+        branch = "auto-sync-{}-to-{}".format(pr.number, baseBranch)
         new_pr_title = "[auto-sync-to-{}]{}".format(baseBranch, pr.title)
         body = append_cherry_pick_in_msg(repo, pr)
         commits = generated_commits(repo, pr)
