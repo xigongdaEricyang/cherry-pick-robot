@@ -344,15 +344,16 @@ def add_repo_upstream(repo):
 def get_cherry_pick_pr_labels(pr):
     prLabelRegex = re.compile(label_regex)
     pr_labels = pr.get_labels()
-    labels = [
-        label.name for label in pr_labels if prLabelRegex.match(label.name)]
+    has_synced = len(filter(lambda x: x.name == 'already-auto-synced', pr_labels)) > 0
+    if has_synced:
+      return []
+    labels = [label.name for label in pr_labels if prLabelRegex.match(label.name)]
     return labels
 
 
 def get_need_sync_prs(repo):
     prs = repo.get_pulls(state='closed', sort='updated',
                          direction='desc', base='master')
-    # print(f">>> Get merged PRs: {[pr.title for pr in prs]}")
     print(f">>> today datetime: {datetime.utcnow().date()}")
     today = datetime.utcnow().date()
     startDay = datetime(today.year, today.month, today.day)
@@ -368,93 +369,57 @@ def generated_commits(repo, pr):
     return commits
 
 
-def generate_pr(repo, pr):
+def generate_pr(repo, pr, label):
     try:
-        print("<<< head: {}, {}".format(pr.head.repo, pr.head.ref))
         branch = "auto-sync-{}".format(pr.number)
+        baseBranch = 'release-{}'.format(
+            version_label_re.match(label).group(0)[1:])
+        new_pr_title = "[auto-sync-to-{}]{}".format(baseBranch, pr.title)
+        body = append_cherry_pick_in_msg(repo, pr)
         commits = generated_commits(repo, pr)
-        labels = get_cherry_pick_pr_labels(pr)
         print(">>> commits: {}".format([ci.commit.sha for ci in commits]))
-        for label in labels:
-            baseBranch = 'release-{}'.format(
-                version_label_re.match(label).group(0)[1:])
-            new_pr_title = "[auto-sync-to-{}]{}".format(baseBranch, pr.title)
-            body = append_cherry_pick_in_msg(repo, pr)
-            stopped, conflict_files = apply_patch(pr, baseBranch, branch, commits)
-            new_pr = repo.create_pull(
-                title=new_pr_title, body=body, head=branch, base=baseBranch)
-            print(f">>> Create PR: {pr_link(repo, new_pr)}")
-            time.sleep(2)
-            new_pr = repo.get_pull(new_pr.number)
-            new_pr.add_to_labels('auto-sync-robot')
-            if stopped:
+        stopped, conflict_files = apply_patch(pr, baseBranch, branch, commits)
+        new_pr = repo.create_pull(
+            title=new_pr_title, body=body, head=branch, base=baseBranch)
+        print(f">>> Create PR: {pr_link(repo, new_pr)}")
+        time.sleep(2)
+        new_pr = repo.get_pull(new_pr.number)
+        new_pr.add_to_labels('auto-sync-robot')
+        if stopped:
+          return (False, new_pr)
+        if not new_pr.mergeable:
+          return (False, new_pr)
+        if should_auto_merge == 'true':
+          commit_title = "{} (#{})".format(commits[0].commit.title, new_pr.number)
+          status = new_pr.merge(merge_method='squash', commit_title=commit_title)
+          if not status.merged:
               return (False, new_pr)
-            if not new_pr.mergeable:
-              return (False, new_pr)
-            if should_auto_merge == 'true':
-              commit_title = "{} (#{})".format(commits[0].commit.title, new_pr.number)
-              status = new_pr.merge(merge_method='squash', commit_title=commit_title)
-              if not status.merged:
-                  return (False, new_pr)
-            return (True, new_pr)
-            
+        pr.add_to_labels('already-auto-synced')
+        return (True, new_pr)
     except Exception as e:
         print(">>> Fail to merge PR {}, cause: {}".format(pr.number, e))
 
-
 def main(cur_repo):
-    # cur_repo = gh.get_repo(repo)
-    # org_members = get_org_members(get_org_name(cur_repo))
-
     need_sync_prs = get_need_sync_prs(cur_repo)
     print(f">>> Need Sync PRs: {[pr.title for pr in need_sync_prs]}")
     succ_pr_list = []
     err_pr_list = []
     for pr in need_sync_prs:
-        res = generate_pr(cur_repo, pr)
-        md = pr_link(cur_repo, pr)
-        if res is not None:
-          if res[1].number >= 0:
-              md += " -> " + pr_link(cur_repo, res[1])
-          if res[0]:
-              succ_pr_list.append(md)
-              print(f">>> {pr_ref(cur_repo, res[1])} has been migrated from {pr_ref(cur_repo, pr)}")
-          else:
-              err_pr_list.append(md)
-              print(f">>> {pr_ref(cur_repo, pr)} could not be merged into {pr_ref(cur_repo, res[1])}")
+        print("<<< head: {}, {}".format(pr.head.repo, pr.head.ref))
+        labels = get_cherry_pick_pr_labels(pr)
+        for label in labels:
+          res = generate_pr(cur_repo, pr, label)
+          md = pr_link(cur_repo, pr)
+          if res is not None:
+            if res[1].number >= 0:
+                md += " -> " + pr_link(cur_repo, res[1])
+            if res[0]:
+                succ_pr_list.append(md)
+                print(f">>> {pr_ref(cur_repo, res[1])} has been migrated from {pr_ref(cur_repo, pr)}")
+            else:
+                err_pr_list.append(md)
+                print(f">>> {pr_ref(cur_repo, pr)} could not be merged into {pr_ref(cur_repo, res[1])}")
     print(">>> {} PRs need to sync".format(len(need_sync_prs)))
-    # unmerged_community_commits = find_unmerged_community_commits_in_ent_repo(comm_repo, ent_repo)
-    # unmerged_community_commits.reverse()
-
-    # add_community_upstream(comm_repo)
-
-    # succ_pr_list = []
-    # err_pr_list = []
-    # for ci in unmerged_community_commits:
-    #     res = create_pr(comm_repo, ent_repo, ci, org_members)
-    #     md = pr_link(comm_repo, ci.pr_num)
-    #     if res[1] >= 0:
-    #         md += " -> " + pr_link(ent_repo, res[1])
-    #     md += " " + ci.login()
-    #     if res[0]:
-    #         succ_pr_list.append(md)
-    #         print(f">>> {pr_ref(ent_repo, res[1])} has been migrated from {pr_ref(comm_repo, ci.pr_num)}")
-    #     else:
-    #         err_pr_list.append(md)
-    #         print(f">>> {pr_ref(comm_repo, ci.pr_num)} could not be merged into {pr_ref(ent_repo, res[1])}")
-    #         break
-
-    # succ_prs = '\n\n'.join(succ_pr_list) if succ_pr_list else "None"
-    # err_prs = '\n\n'.join(err_pr_list) if err_pr_list else "None"
-
-    # print(">>> Enable dingtalk notification: {}".format(enable_dingtalk_notification))
-    # if enable_dingtalk_notification and (len(succ_pr_list) > 0 or len(err_pr_list) > 0):
-    #     text = f"### Auto Merge Status\nMerge successfully:\n\n{succ_prs}\n\nFailed to merge:\n\n{err_prs}"
-    #     dingtalk_bot.send_markdown(title='Auto Merge Status', text=text, is_at_all=False)
-
-    # if len(unmerged_community_commits) == 0:
-    #     print(">>> There's no any PRs to sync")
-
 
 if __name__ == "__main__":
     cur_repo = os.environ["GITHUB_REPOSITORY"]
