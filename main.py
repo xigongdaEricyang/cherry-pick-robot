@@ -354,10 +354,10 @@ def get_cherry_pick_pr_labels(pr):
 def get_need_sync_prs(repo):
     prs = repo.get_pulls(state='closed', sort='updated',
                          direction='desc', base='master')
-    print(f">>> today datetime: {datetime.utcnow().date()}")
-    today = datetime.utcnow().date()
-    startDay = datetime(today.year, today.month, today.day)
-    return [pr for pr in prs if len(get_cherry_pick_pr_labels(pr)) > 0 and pr.merged and pr.merged_at > startDay]
+    # print(f">>> today datetime: {datetime.utcnow().date()}")
+    # today = datetime.utcnow().date()
+    # startDay = datetime(today.year, today.month, today.day)
+    return [pr for pr in prs if len(get_cherry_pick_pr_labels(pr)) > 0]
 
 
 def generated_commits(repo, pr):
