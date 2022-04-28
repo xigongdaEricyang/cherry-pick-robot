@@ -344,7 +344,7 @@ def add_repo_upstream(repo):
 def get_cherry_pick_pr_labels(pr):
     prLabelRegex = re.compile(label_regex)
     pr_labels = pr.get_labels()
-    has_synced = len(filter(lambda x: x.name == 'already-auto-synced', pr_labels)) > 0
+    has_synced = len(list(filter(lambda x: x.name == 'already-auto-synced', pr_labels))) > 0
     if has_synced:
       return []
     labels = [label.name for label in pr_labels if prLabelRegex.match(label.name)]
