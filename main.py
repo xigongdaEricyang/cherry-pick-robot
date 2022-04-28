@@ -351,7 +351,7 @@ def get_cherry_pick_pr_labels(pr):
 
 def get_need_sync_prs(repo):
     prs = repo.get_pulls(state='closed', sort='updated',
-                         direction='desc', base='release-master')
+                         direction='desc', base='master')
     # print(f">>> Get merged PRs: {[pr.title for pr in prs]}")
     print(f">>> today datetime: {datetime.utcnow().date()}")
     today = datetime.utcnow().date()
