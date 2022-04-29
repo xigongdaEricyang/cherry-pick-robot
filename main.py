@@ -354,7 +354,7 @@ def get_cherry_pick_pr_labels(pr):
 def get_need_sync_prs(repo):
     prs = repo.get_pulls(state='closed', sort='updated',
                          direction='desc', base='master')
-    # print(f">>> today datetime: {datetime.utcnow().date()}")
+    print(f">>> pr total: {prs.totalCount}")
     # today = datetime.utcnow().date()
     # startDay = datetime(today.year, today.month, today.day)
     return [pr for pr in prs if len(get_cherry_pick_pr_labels(pr)) > 0]
@@ -379,7 +379,7 @@ def getBaseBranch(repo, label):
 
 def generate_pr(repo, pr, label):
     try:
-        baseBranch = getBaseBranch(label)
+        baseBranch = getBaseBranch(repo, label)
         branch = "auto-sync-{}-to-{}".format(pr.number, baseBranch)
         new_pr_title = "[auto-sync-to-{}]{}".format(baseBranch, pr.title)
         body = append_cherry_pick_in_msg(repo, pr)
