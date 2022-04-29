@@ -31,7 +31,7 @@ gh = Github(token)
 prog = re.compile(r"(.*)\(#(\d+)\)(?:$|\n).*")
 title_re = re.compile(r"(.*)(?:$|\n).*")
 version_label_re = re.compile(r"^v[0-9]*\.[0-9]*(.[0-9])?")
-
+prLabelRegex = re.compile(label_regex)
 
 class Commit:
     def __init__(self, commit=None):
@@ -342,7 +342,6 @@ def add_repo_upstream(repo):
 
 
 def get_cherry_pick_pr_labels(pr):
-    prLabelRegex = re.compile(label_regex)
     pr_labels = pr.get_labels()
     has_synced = len(list(filter(lambda x: x.name == 'already-auto-synced', pr_labels))) > 0
     if has_synced:
