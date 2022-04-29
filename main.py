@@ -30,7 +30,7 @@ gh = Github(token)
 
 prog = re.compile(r"(.*)\(#(\d+)\)(?:$|\n).*")
 title_re = re.compile(r"(.*)(?:$|\n).*")
-version_label_re = re.compile(r"^v[0-9]*\.[0-9]*")
+version_label_re = re.compile(r"^v[0-9]*\.[0-9]*(.[0-9])?")
 
 
 class Commit:
@@ -368,11 +368,18 @@ def generated_commits(repo, pr):
             commits.append(commit)
     return commits
 
+def getBaseBranch(repo, label):
+    full_version = version_label_re.match(label).group(0)[1:]
+    base_branch = 'release-{}'.format(full_version)
+    if repo.get_branch(base_branch) is None:
+        base_branch = 'v-{}'.format(full_version)
+        if repo.get_branch(base_branch) is None:
+            raise Exception('base branch not found, label: {}'.format(label))
+    return base_branch
 
 def generate_pr(repo, pr, label):
     try:
-        baseBranch = 'release-{}'.format(
-            version_label_re.match(label).group(0)[1:])
+        baseBranch = getBaseBranch(label)
         branch = "auto-sync-{}-to-{}".format(pr.number, baseBranch)
         new_pr_title = "[auto-sync-to-{}]{}".format(baseBranch, pr.title)
         body = append_cherry_pick_in_msg(repo, pr)
@@ -419,7 +426,7 @@ def main(cur_repo):
             else:
                 err_pr_list.append(md)
                 print(f">>> {pr_ref(cur_repo, pr)} could not be merged into {pr_ref(cur_repo, res[1])}")
-    print(">>> {} PRs need to sync".format(len(need_sync_prs)))
+    print(">>> {} PRs need to sync, created {}, failed {}".format(len(need_sync_prs), len(succ_pr_list), len(err_pr_list)))
 
 if __name__ == "__main__":
     cur_repo = os.environ["GITHUB_REPOSITORY"]
