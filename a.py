@@ -7,5 +7,7 @@ if __name__ == "__main__":
     version_label_re = re.compile(r"^v[0-9]*\.[0-9]*(.[0-9])?")
     label = "v3.0.0-cherry-pick"
     print(version_label_re.match(label).group(0)[1:])
+    x = "alreasdy-auto-picked-1.2"
+    print(x.startswith("already-auto-picked"))
     # print(len(list(filter(lambda x: x == '10', arr))))
 

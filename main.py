@@ -273,43 +273,6 @@ CONFLICT FILES:
                                         '\n'.join(conflict_files)))
 
 
-# def create_pr(comm_repo, ent_repo, comm_ci, org_members):
-#     try:
-#         merged_pr = comm_repo.get_pull(comm_ci.pr_num)
-#         branch = "pr-{}".format(merged_pr.number)
-#         stopped, conflict_files = apply_patch(branch, comm_ci)
-#         body = append_migration_in_msg(comm_repo, comm_ci, merged_pr)
-#         new_pr = ent_repo.create_pull(title=comm_ci.title, body=body, head=branch, base="master")
-
-#         print(f">>> Create PR: {pr_ref(ent_repo, new_pr)}")
-#         time.sleep(2)
-
-#         new_pr = ent_repo.get_pull(new_pr.number)
-#         new_pr.add_to_labels('auto-sync')
-
-#         if stopped:
-#             notify_author_by_comment(ent_repo,
-#                                      comm_repo,
-#                                      comm_ci,
-#                                      new_pr.number,
-#                                      comm_ci.pr_num,
-#                                      org_members,
-#                                      conflict_files)
-#             return (False, new_pr.number)
-
-#         if not new_pr.mergeable:
-#             return (False, new_pr.number)
-
-#         commit_title = "{} (#{})".format(comm_ci.title, new_pr.number)
-#         status = new_pr.merge(merge_method='squash', commit_title=commit_title)
-#         if not status.merged:
-#             return (False, new_pr.number)
-#         return (True, new_pr.number)
-#     except Exception as e:
-#         print(">>> Fail to merge PR {}, cause: {}".format(comm_ci.pr_num, e))
-#         return (False, -1 if new_pr is None else new_pr.number)
-
-
 def get_org_name(repo):
     l = repo.split('/')
     assert len(l) == 2
@@ -343,7 +306,7 @@ def add_repo_upstream(repo):
 
 def get_cherry_pick_pr_labels(pr):
     pr_labels = pr.get_labels()
-    has_synced = len(list(filter(lambda x: x.name == 'already-auto-synced', pr_labels))) > 0
+    has_synced = len(list(filter(lambda x: x.name.startswith("already-auto-picked"), pr_labels))) > 0
     if has_synced:
       return []
     labels = [label.name for label in pr_labels if prLabelRegex.match(label.name)]
@@ -354,8 +317,6 @@ def get_need_sync_prs(repo):
     prs = repo.get_pulls(state='closed', sort='updated',
                          direction='desc', base='master')
     print(f">>> pr total: {prs.totalCount}")
-    # today = datetime.utcnow().date()
-    # startDay = datetime(today.year, today.month, today.day)
     return [pr for pr in prs if len(get_cherry_pick_pr_labels(pr)) > 0]
 
 
@@ -367,8 +328,11 @@ def generated_commits(repo, pr):
             commits.append(commit)
     return commits
 
+def getFullVersion(label):
+  return version_label_re.match(label).group(0)[1:]
+
 def getBaseBranch(repo, label):
-    full_version = version_label_re.match(label).group(0)[1:]
+    full_version = getFullVersion(label)
     base_branch = 'release-{}'.format(full_version)
     if repo.get_branch(base_branch) is None:
         base_branch = 'v-{}'.format(full_version)
@@ -379,8 +343,8 @@ def getBaseBranch(repo, label):
 def generate_pr(repo, pr, label):
     try:
         baseBranch = getBaseBranch(repo, label)
-        branch = "auto-sync-{}-to-{}".format(pr.number, baseBranch)
-        new_pr_title = "[auto-sync-to-{}]{}".format(baseBranch, pr.title)
+        branch = "auto-pick-{}-to-{}".format(pr.number, baseBranch)
+        new_pr_title = "[auto-pick-to-{}]{}".format(baseBranch, pr.title)
         body = append_cherry_pick_in_msg(repo, pr)
         commits = generated_commits(repo, pr)
         print(">>> commits: {}".format([ci.commit.sha for ci in commits]))
@@ -390,7 +354,7 @@ def generate_pr(repo, pr, label):
         print(f">>> Create PR: {pr_link(repo, new_pr)}")
         time.sleep(2)
         new_pr = repo.get_pull(new_pr.number)
-        new_pr.add_to_labels('auto-sync-robot')
+        new_pr.add_to_labels('auto-pick-robot')
         if stopped:
           return (False, new_pr)
         if not new_pr.mergeable:
@@ -400,7 +364,7 @@ def generate_pr(repo, pr, label):
           status = new_pr.merge(merge_method='squash', commit_title=commit_title)
           if not status.merged:
               return (False, new_pr)
-        pr.add_to_labels('already-auto-synced')
+        pr.add_to_labels('already-auto-picked-{}'.format(getFullVersion(label)))
         return (True, new_pr)
     except Exception as e:
         print(">>> Fail to merge PR {}, cause: {}".format(pr.number, e))
