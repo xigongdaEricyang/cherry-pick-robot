@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from email.mime import base
+import functools
 import os
 import re
 import sh
@@ -169,18 +170,18 @@ def apply_patch(pr, baseBranch, branch, commits):
     return (stopped, conflict_files)
 
 
-def find_latest_community_commit_in_ent_repo(ent_commit: Commit, community_commits):
-    assert ent_commit.is_valid()
-    for ci in community_commits:
-        assert ci.is_valid()
-        if ent_commit.has_same_title(ci):
-            user = gh.get_user().login
-            if ent_commit.login() == user:
-                return ci
-            else:
-                print(">>> [WARN] the commit has been checkin by {} rather than {}: {}".format(
-                    ent_commit.login(), user, ent_commit.title))
-    return Commit()
+# def find_latest_community_commit_in_ent_repo(ent_commit: Commit, community_commits):
+#     assert ent_commit.is_valid()
+#     for ci in community_commits:
+#         assert ci.is_valid()
+#         if ent_commit.has_same_title(ci):
+#             user = gh.get_user().login
+#             if ent_commit.login() == user:
+#                 return ci
+#             else:
+#                 print(">>> [WARN] the commit has been checkin by {} rather than {}: {}".format(
+#                     ent_commit.login(), user, ent_commit.title))
+#     return Commit()
 
 
 def generate_latest_100_commits(repo):
@@ -194,15 +195,15 @@ def generate_latest_100_commits(repo):
     return commits
 
 
-def find_unmerged_community_commits_in_ent_repo(community_repo, ent_repo):
-    ent_commits = generate_latest_100_commits(ent_repo)
-    community_commits = generate_latest_100_commits(community_repo)
-    for ent_commit in ent_commits:
-        ci = find_latest_community_commit_in_ent_repo(
-            ent_commit, community_commits)
-        if ci.is_valid():
-            return community_commits[:community_commits.index(ci)]
-    return []
+# def find_unmerged_community_commits_in_ent_repo(community_repo, ent_repo):
+#     ent_commits = generate_latest_100_commits(ent_repo)
+#     community_commits = generate_latest_100_commits(community_repo)
+#     for ent_commit in ent_commits:
+#         ci = find_latest_community_commit_in_ent_repo(
+#             ent_commit, community_commits)
+#         if ci.is_valid():
+#             return community_commits[:community_commits.index(ci)]
+#     return []
 
 
 def pr_ref(repo, pr):
@@ -303,6 +304,18 @@ def add_repo_upstream(repo):
         print(">>> Fail to add remote, cause: {}".format(e))
         raise
 
+def generare_sort_cmp(repo):
+    pr_sorted_list = [commit.pr_num for commit in generate_latest_100_commits(repo)]
+    def sort_cmp(pr1, pr2):
+        pr1_index = pr_sorted_list.index(pr1.number)
+        pr2_index = pr_sorted_list.index(pr2.number)
+        if pr1_index < pr2_index:
+            return -1
+        if pr1_index > pr2_index:
+            return 1
+        return 0     
+    return sort_cmp 
+    
 
 def get_cherry_pick_pr_labels(pr):
     pr_labels = pr.get_labels()
@@ -312,12 +325,22 @@ def get_cherry_pick_pr_labels(pr):
     labels = [label.name for label in pr_labels if prLabelRegex.match(label.name)]
     return labels
 
+# old commit merged first
+def sort_pr(repo, prs):
+    sorted_prs = sorted(prs, key=functools.cmp_to_key(generare_sort_cmp(repo), reversed=True))
+    print(f">>> sorted pr list: ".format([pr.number for pr in sorted_prs]))
+    return sorted_prs
 
+# max 100 prs
 def get_need_sync_prs(repo):
-    prs = repo.get_pulls(state='closed', sort='updated',
-                         direction='desc', base='master')
+    prs = []
+    for i, pr in enumerate(repo.get_pulls(state='closed', sort='updated', direction='desc', base='master')):
+        if i > 100:
+            break
+        if len(get_cherry_pick_pr_labels(pr)) > 0:
+            prs.append(pr)
     print(f">>> pr total: {prs.totalCount}")
-    return [pr for pr in prs if len(get_cherry_pick_pr_labels(pr)) > 0]
+    return sort_pr(repo, prs)
 
 
 def generated_commits(repo, pr):
