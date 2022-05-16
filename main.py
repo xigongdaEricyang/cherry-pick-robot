@@ -269,7 +269,7 @@ def get_cherry_pick_pr_labels(pr):
 
 # old commit merged first
 def sort_pr(repo, prs):
-    sorted_prs = sorted(prs, key=functools.cmp_to_key(generare_sort_cmp(repo), reversed=True))
+    sorted_prs = sorted(prs, key=functools.cmp_to_key(generare_sort_cmp(repo)), reversed=True)
     print(f">>> sorted pr list: ".format([pr.number for pr in sorted_prs]))
     return sorted_prs
 
