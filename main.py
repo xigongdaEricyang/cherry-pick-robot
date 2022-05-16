@@ -271,10 +271,10 @@ def get_cherry_pick_pr_labels(pr):
     pr_labels = pr.get_labels()
     labels = [label.name for label in pr_labels if prLabelRegex.match(label.name)]
     alreadyPickedLabels = [label.name for label in pr_labels if label.name.startswith(already_auto_pick_prefix)]
-    print("pr_num:{}, labels, {}".format(pr.number,labels))
-    print("pr_num:{}, alreadyPickedLabels, {}".format(pr.number,alreadyPickedLabels))
+    # print("pr_num:{}, labels, {}".format(pr.number,labels))
+    # print("pr_num:{}, alreadyPickedLabels, {}".format(pr.number,alreadyPickedLabels))
     newLabels = getNotAutoPickedLables(labels, alreadyPickedLabels)
-    print("pr_num:{}, newLabels, {}".format(pr.number,newLabels))
+    # print("pr_num:{}, newLabels, {}".format(pr.number,newLabels))
     return newLabels
 
 # old commit merged first
@@ -287,7 +287,7 @@ def sort_pr(repo, prs):
 def get_need_sync_prs(repo):
     prs = []
     for i, pr in enumerate(repo.get_pulls(state='closed', sort='updated', direction='desc', base='master')):
-        if i > 100:
+        if i > 200:
             break
         if len(get_cherry_pick_pr_labels(pr)) > 0:
             prs.append(pr)
@@ -355,18 +355,18 @@ def cherryPickPr(cur_repo, need_sync_prs):
         print("<<< head: {}, {}".format(pr.head.repo, pr.head.ref))
         labels = get_cherry_pick_pr_labels(pr)
         print("<<< labels1111: {}".format(labels))
-        # for label in labels:
-          # res = generate_pr(cur_repo, pr, label)
-          # md = pr_link(cur_repo, pr)
-          # if res is not None:
-          #   if res[1].number >= 0:
-          #       md += " -> " + pr_link(cur_repo, res[1])
-          #   if res[0]:
-          #       succ_pr_list.append(md)
-          #       print(f">>> {pr_ref(cur_repo, res[1])} has been migrated from {pr_ref(cur_repo, pr)}")
-          #   else:
-          #       err_pr_list.append(md)
-          #       print(f">>> {pr_ref(cur_repo, pr)} could not be merged into {pr_ref(cur_repo, res[1])}")
+        for label in labels:
+          res = generate_pr(cur_repo, pr, label)
+          md = pr_link(cur_repo, pr)
+          if res is not None:
+            if res[1].number >= 0:
+                md += " -> " + pr_link(cur_repo, res[1])
+            if res[0]:
+                succ_pr_list.append(md)
+                print(f">>> {pr_ref(cur_repo, res[1])} has been migrated from {pr_ref(cur_repo, pr)}")
+            else:
+                err_pr_list.append(md)
+                print(f">>> {pr_ref(cur_repo, pr)} could not be merged into {pr_ref(cur_repo, res[1])}")
     print(">>> {} PRs need to sync, created {}, failed {}".format(len(need_sync_prs), len(succ_pr_list), len(err_pr_list)))
 
 def cherryPickAllPrs(cur_repo):
