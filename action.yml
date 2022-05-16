@@ -18,6 +18,9 @@ inputs:
   submodule_path:
     description: 'Does repo contain submodule '
     required: false
+  pr_num:
+    description: 'Specificy pr num to cherry pick current pr'
+    required: false
 runs:
   using: "docker"
   image: "Dockerfile"

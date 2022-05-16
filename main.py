@@ -33,6 +33,7 @@ prog = re.compile(r"(.*)\(#(\d+)\)(?:$|\n).*")
 title_re = re.compile(r"(.*)(?:$|\n).*")
 version_label_re = re.compile(r"^v[0-9]*\.[0-9]*(.[0-9])?")
 prLabelRegex = re.compile(label_regex)
+already_auto_pick_prefix = "already-auto-picked"
 
 class Commit:
     def __init__(self, commit=None):
@@ -70,29 +71,6 @@ class Commit:
                 self.title = msg.group(1).strip()
 
 
-def get_org_members(org_name):
-    print(">>> Get org members")
-    org = gh.get_organization(org_name)
-    return [m.login for m in org.get_members()]
-
-
-def must_create_dir(filename):
-    dirname = os.path.dirname(filename)
-    if len(dirname) > 0 and not os.path.exists(dirname):
-        sh.mkdir('-p', dirname)
-
-
-def overwrite_conflict_files(ci):
-    print(">>> Overwrite PR conflict files")
-    for f in ci.files:
-        if f.status == "removed" and os.path.exists(f.filename):
-            git.rm('-rf', f.filename)
-        else:
-            must_create_dir(f.filename)
-            sh.curl("-fsSL", f.raw_url, "-o", f.filename)
-        print(f"      {f.filename}")
-
-
 def commit_changes(ci: Commit):
     author = ci.author()
     print(f">>> Commit changes by <{author.email}>")
@@ -118,8 +96,6 @@ def add_remote_url(repo):
     remote_url = 'https://github.com/{}.git'.format(repo.full_name)
     try:
       remote_name = repo.owner.login
-      # print(">>> remote_name, {}, {}".format(repo.owner, remote_name))
-      # git.remote('rm', remote_name)
       git.remote("add", remote_name, remote_url)
       git.fetch(remote_name)
     except Exception as e:
@@ -169,21 +145,6 @@ def apply_patch(pr, baseBranch, branch, commits):
 
     return (stopped, conflict_files)
 
-
-# def find_latest_community_commit_in_ent_repo(ent_commit: Commit, community_commits):
-#     assert ent_commit.is_valid()
-#     for ci in community_commits:
-#         assert ci.is_valid()
-#         if ent_commit.has_same_title(ci):
-#             user = gh.get_user().login
-#             if ent_commit.login() == user:
-#                 return ci
-#             else:
-#                 print(">>> [WARN] the commit has been checkin by {} rather than {}: {}".format(
-#                     ent_commit.login(), user, ent_commit.title))
-#     return Commit()
-
-
 def generate_latest_100_commits(repo):
     commits = []
     for i, ci in enumerate(repo.get_commits()):
@@ -193,18 +154,6 @@ def generate_latest_100_commits(repo):
         if commit.is_valid():
             commits.append(commit)
     return commits
-
-
-# def find_unmerged_community_commits_in_ent_repo(community_repo, ent_repo):
-#     ent_commits = generate_latest_100_commits(ent_repo)
-#     community_commits = generate_latest_100_commits(community_repo)
-#     for ent_commit in ent_commits:
-#         ci = find_latest_community_commit_in_ent_repo(
-#             ent_commit, community_commits)
-#         if ci.is_valid():
-#             return community_commits[:community_commits.index(ci)]
-#     return []
-
 
 def pr_ref(repo, pr):
     pr_num = pr if isinstance(pr, int) else pr.number
@@ -274,18 +223,6 @@ CONFLICT FILES:
                                         '\n'.join(conflict_files)))
 
 
-def get_org_name(repo):
-    l = repo.split('/')
-    assert len(l) == 2
-    return l[0]
-
-
-def get_repo_name(repo):
-    l = repo.split('/')
-    assert len(l) == 2
-    return l[1]
-
-
 def add_repo_upstream(repo):
     remote_url = 'https://github.com/{}.git'.format(repo.full_name)
     remote_name = 'origin'
@@ -316,14 +253,19 @@ def generare_sort_cmp(repo):
         return 0     
     return sort_cmp 
     
+def getNotAutoPickedLables(labels, alreadyPickedLabels):
+    newLabels = []
+    for label in labels:
+        full_version = getFullVersion(label)
+        if "{}-{}".format(already_auto_pick_prefix, full_version) not in alreadyPickedLabels:
+            newLabels.append(label)
+    return newLabels
 
 def get_cherry_pick_pr_labels(pr):
     pr_labels = pr.get_labels()
-    has_synced = len(list(filter(lambda x: x.name.startswith("already-auto-picked"), pr_labels))) > 0
-    if has_synced:
-      return []
     labels = [label.name for label in pr_labels if prLabelRegex.match(label.name)]
-    return labels
+    alreadyPickedLabels = [label.name for label in pr_labels if label.name.startswith(already_auto_pick_prefix)]
+    return getNotAutoPickedLables(labels, alreadyPickedLabels)
 
 # old commit merged first
 def sort_pr(repo, prs):
@@ -387,14 +329,16 @@ def generate_pr(repo, pr, label):
           status = new_pr.merge(merge_method='squash', commit_title=commit_title)
           if not status.merged:
               return (False, new_pr)
-        pr.add_to_labels('already-auto-picked-{}'.format(getFullVersion(label)))
+        pr.add_to_labels('{}-{}'.format(already_auto_pick_prefix, getFullVersion(label)))
         return (True, new_pr)
     except Exception as e:
         print(">>> Fail to merge PR {}, cause: {}".format(pr.number, e))
 
-def main(cur_repo):
-    need_sync_prs = get_need_sync_prs(cur_repo)
-    print(f">>> Need Sync PRs: {[pr.title for pr in need_sync_prs]}")
+def cherryPickByPrNum(repo, pr_num):
+    pr = repo.get_pull(pr_num)
+    cherryPickPr(repo, [pr])
+
+def cherryPickPr(cur_repo, need_sync_prs):
     succ_pr_list = []
     err_pr_list = []
     for pr in need_sync_prs:
@@ -414,9 +358,18 @@ def main(cur_repo):
                 print(f">>> {pr_ref(cur_repo, pr)} could not be merged into {pr_ref(cur_repo, res[1])}")
     print(">>> {} PRs need to sync, created {}, failed {}".format(len(need_sync_prs), len(succ_pr_list), len(err_pr_list)))
 
+def cherryPickAllPrs(cur_repo):
+    need_sync_prs = get_need_sync_prs(cur_repo)
+    print(f">>> Need Sync PRs: {[pr.title for pr in need_sync_prs]}")
+    cherryPickPr(need_sync_prs)
+
 if __name__ == "__main__":
     cur_repo = os.environ["GITHUB_REPOSITORY"]
+    pr_num = os.environ["GITHUB_REPOSITORY"]
     repo = gh.get_repo(cur_repo)
     print(">>> From: {}".format(cur_repo))
     add_repo_upstream(repo)
-    main(repo)
+    if pr_num is not None:
+      cherryPickByPrNum(repo, pr_num)
+    else:
+      cherryPickAllPrs(repo)
