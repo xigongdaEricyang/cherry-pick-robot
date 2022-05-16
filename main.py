@@ -228,6 +228,7 @@ def add_repo_upstream(repo):
     remote_name = 'origin'
 
     try:
+        print(">>>>, remote_url, {}".format(remote_url))
         git.clone(remote_url)
         sh.cd(repo.name)
         # git.remote('-vv')
