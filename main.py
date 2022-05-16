@@ -366,7 +366,7 @@ def cherryPickPr(cur_repo, need_sync_prs):
 def cherryPickAllPrs(cur_repo):
     need_sync_prs = get_need_sync_prs(cur_repo)
     print(f">>> Need Sync PRs: {[pr.title for pr in need_sync_prs]}")
-    cherryPickPr(need_sync_prs)
+    cherryPickPr(cur_repo, need_sync_prs)
 
 if __name__ == "__main__":
     cur_repo = os.environ["GITHUB_REPOSITORY"]

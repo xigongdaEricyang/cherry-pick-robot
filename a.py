@@ -2,6 +2,10 @@ import functools
 
 
 def sort_cmp(number1, number2):
+    if number1 not in pr_sorted_list: 
+      return 1
+    if number2 not in pr_sorted_list:
+      return -1
     pr1_index = pr_sorted_list.index(number1)
     pr2_index = pr_sorted_list.index(number2)
     if pr1_index < pr2_index:
