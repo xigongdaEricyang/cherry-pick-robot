@@ -245,6 +245,10 @@ def generare_sort_cmp(repo):
     pr_sorted_list = [commit.pr_num for commit in generate_latest_100_commits(repo)]
     print(">>>> sotred pr num list: {}".format(pr_sorted_list))
     def sort_cmp(pr1, pr2):
+        if pr1.number not in pr_sorted_list: 
+          return 1
+        if pr2.number not in pr_sorted_list:
+          return -1
         pr1_index = pr_sorted_list.index(pr1.number)
         pr2_index = pr_sorted_list.index(pr2.number)
         if pr1_index < pr2_index:
@@ -282,7 +286,7 @@ def get_need_sync_prs(repo):
             break
         if len(get_cherry_pick_pr_labels(pr)) > 0:
             prs.append(pr)
-    print(">>> pr total: {}".format([pr.nubmer for pr in prs]))
+    print(">>> pr total: {}".format([pr.number for pr in prs]))
     return sort_pr(repo, prs)
 
 
