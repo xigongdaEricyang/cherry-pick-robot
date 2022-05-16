@@ -243,6 +243,7 @@ def add_repo_upstream(repo):
 
 def generare_sort_cmp(repo):
     pr_sorted_list = [commit.pr_num for commit in generate_latest_100_commits(repo)]
+    print(">>>> sotred pr num list: {}".format(pr_sorted_list))
     def sort_cmp(pr1, pr2):
         pr1_index = pr_sorted_list.index(pr1.number)
         pr2_index = pr_sorted_list.index(pr2.number)
