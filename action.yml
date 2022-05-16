@@ -2,9 +2,6 @@ name: 'Nebula Cherry Pick Robot'
 author: rivery.wang
 description: 'Create pr to target branch when this pr has special label'
 inputs:
-  from_repo:
-    description: 'from repository to current'
-    required: true
   repo_token:
     description: 'repository token to access the codebase'
     required: true
