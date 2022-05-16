@@ -281,7 +281,7 @@ def get_need_sync_prs(repo):
             break
         if len(get_cherry_pick_pr_labels(pr)) > 0:
             prs.append(pr)
-    print(f">>> pr total: {prs.totalCount}")
+    print(f">>> pr total: {len(prs)}")
     return sort_pr(repo, prs)
 
 
