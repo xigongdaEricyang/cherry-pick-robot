@@ -367,10 +367,10 @@ if __name__ == "__main__":
     cur_repo = os.environ["GITHUB_REPOSITORY"]
     pr_num = os.environ["INPUT_PR_NUM"]
     repo = gh.get_repo(cur_repo)
-    print(">>> From: {}, {}".format(cur_repo, pr_num == None))
+    print(">>> From: {}".format(cur_repo))
     add_repo_upstream(repo)
     print(">>> pr_num, {}".format(pr_num))
-    if pr_num is not None:
+    if pr_num:
       cherryPickByPrNum(repo, pr_num)
     else:
       cherryPickAllPrs(repo)
