@@ -308,16 +308,17 @@ def getFullVersion(label):
 
 def getBaseBranch(repo, label):
     full_version = getFullVersion(label)
-    base_branch = 'release-{}'.format(full_version)
-    print("<<< base_branch, {}".format(repo.get_branch(base_branch)))
-    if repo.get_branch(base_branch):
+    try:
+      base_branch = 'release-{}'.format(full_version)
+      repo.get_branch(base_branch)
+      return base_branch
+    except:
+      base_branch = 'v{}'.format(full_version)
+      try:
+        repo.get_branch(base_branch)
         return base_branch
-    base_branch = 'v{}'.format(full_version)
-    print("<<< base_branch, {}".format(repo.get_branch(base_branch)))
-    if repo.get_branch(base_branch):
-        return base_branch
-        # raise Exception('base branch not found, label: {}'.format(label))
-    return base_branch
+      except:
+        raise Exception('base branch not found, label: {}'.format(label))
 
 def generate_pr(repo, pr, label):
     try:
