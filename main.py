@@ -271,10 +271,10 @@ def get_cherry_pick_pr_labels(pr):
     pr_labels = pr.get_labels()
     labels = [label.name for label in pr_labels if prLabelRegex.match(label.name)]
     alreadyPickedLabels = [label.name for label in pr_labels if label.name.startswith(already_auto_pick_prefix)]
-    # print("pr_num:{}, labels, {}".format(pr.number,labels))
-    # print("pr_num:{}, alreadyPickedLabels, {}".format(pr.number,alreadyPickedLabels))
+    print("pr_num:{}, labels, {}".format(pr.number,labels))
+    print("pr_num:{}, alreadyPickedLabels, {}".format(pr.number,alreadyPickedLabels))
     newLabels = getNotAutoPickedLables(labels, alreadyPickedLabels)
-    # print("pr_num:{}, newLabels, {}".format(pr.number,newLabels))
+    print("pr_num:{}, newLabels, {}".format(pr.number,newLabels))
     return newLabels
 
 # old commit merged first
@@ -313,6 +313,7 @@ def getBaseBranch(repo, label):
         base_branch = 'v-{}'.format(full_version)
         if repo.get_branch(base_branch) is None:
             raise Exception('base branch not found, label: {}'.format(label))
+    print("<<< base_branch, {}".format(base_branch))
     return base_branch
 
 def generate_pr(repo, pr, label):
