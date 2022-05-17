@@ -271,10 +271,10 @@ def get_cherry_pick_pr_labels(pr):
     pr_labels = pr.get_labels()
     labels = [label.name for label in pr_labels if prLabelRegex.match(label.name)]
     alreadyPickedLabels = [label.name for label in pr_labels if label.name.startswith(already_auto_pick_prefix)]
-    print("pr_num:{}, labels, {}".format(pr.number,labels))
-    print("pr_num:{}, alreadyPickedLabels, {}".format(pr.number,alreadyPickedLabels))
+    # print("pr_num:{}, labels, {}".format(pr.number,labels))
+    # print("pr_num:{}, alreadyPickedLabels, {}".format(pr.number,alreadyPickedLabels))
     newLabels = getNotAutoPickedLables(labels, alreadyPickedLabels)
-    print("pr_num:{}, newLabels, {}".format(pr.number,newLabels))
+    # print("pr_num:{}, newLabels, {}".format(pr.number,newLabels))
     return newLabels
 
 # old commit merged first
@@ -385,7 +385,7 @@ if __name__ == "__main__":
     repo = gh.get_repo(cur_repo)
     print(">>> From: {}".format(cur_repo))
     add_repo_upstream(repo)
-    print(">>> pr_num, {}".format(pr_num))
+    # print(">>> pr_num, {}".format(pr_num))
     if pr_num:
       cherryPickByPrNum(repo, pr_num)
     else:
