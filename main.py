@@ -31,7 +31,7 @@ gh = Github(token)
 
 prog = re.compile(r"(.*)\(#(\d+)\)(?:$|\n).*")
 title_re = re.compile(r"(.*)(?:$|\n).*")
-version_label_re = re.compile(r"^v[0-9]*\.[0-9]*(.[0-9])?")
+# version_label_re = re.compile(r"^v[0-9]*\.[0-9]*(.[0-9])?")
 prLabelRegex = re.compile(label_regex)
 already_auto_pick_prefix = "already-auto-picked"
 
@@ -304,7 +304,10 @@ def generated_commits(repo, pr):
     return commits
 
 def getFullVersion(label):
-  return version_label_re.match(label).group(0)[1:]
+  if label.startswith('cherry-pick-'):
+    return label[len('cherry-pick-'):][1:]
+  if label.endswith('-cherry-pick'):
+    return label[:-len('-cherry-pick')][1:]
 
 def getBaseBranch(repo, label):
     full_version = getFullVersion(label)
