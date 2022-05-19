@@ -121,6 +121,7 @@ def apply_patch(pr, baseBranch, branch, commits):
     if pr.base.repo.full_name != pr.head.repo.full_name:
       add_remote_url(pr.head.repo)
     conflict_files = []
+    time.sleep(500000)
     try:
         git('cherry-pick', *[ci.commit.sha for ci in commits])
     except sh.ErrorReturnCode as e:
