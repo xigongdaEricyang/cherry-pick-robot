@@ -157,6 +157,7 @@ def generate_latest_200_commits(repo):
         if i > 200:
             break
         commit = Commit(repo.get_commit(ci.sha))
+        print(">>> commit: {}".format(commit.title))
         if commit.is_valid():
             latest_200_commits.append(commit)
 
@@ -306,12 +307,12 @@ def get_need_sync_prs(repo):
     pr_nums = []
     for commit_ci in latest_200_commits:
         pr_num = commit_ci.pr_num
-        pr_nums.append(pr_num)
-        if pr_num > 0:
-            pr = repo.get_pull(pr_num)
-            labels = get_cherry_pick_pr_labels(pr)
-            if len(labels) > 0:
-                prs.append((pr, commit_ci))
+        # pr_nums.append(pr_num)
+        pr = repo.get_pull(pr_num)
+        labels = get_cherry_pick_pr_labels(pr)
+        if len(labels) > 0:
+            prs.append((pr, commit_ci))
+            
     print(">>> pr_nums: {}".format(pr_nums))
     print(">>> pr num 111: {}".format(len(prs)))
     prs.reverse()          
