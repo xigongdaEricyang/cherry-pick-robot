@@ -152,15 +152,16 @@ def apply_patch(pr, baseBranch, branch, comm_ci):
 
 def generate_latest_200_commits(repo):
     # commits = []
+    global latest_200_commits
     latest_200_commits = []
     for i, ci in enumerate(repo.get_commits()):
         if i > 200:
             break
         commit = Commit(repo.get_commit(ci.sha))
-        print(">>> commit: {}".format(commit.title))
+        # print(">>> commit: {}".format(commit.title))
         if commit.is_valid():
             latest_200_commits.append(commit)
-    print(">>>>>, commit_num, {}".format(len(latest_200_commits)))
+    # print(">>>>>, commit_num, {}".format(len(latest_200_commits)))
 
 
 def pr_ref(repo, pr):
