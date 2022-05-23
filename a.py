@@ -39,6 +39,8 @@ if __name__ == "__main__":
     # print(sorted(pr_list, key=functools.cmp_to_key(sort_cmp)))
     # print(len(list(filter(lambda x: x == '10', arr))))
 
-    a = []
+    a = [1,2,3]
     a.reverse()
+    print(a)
+    # print(">>> pr total: {}".format([(pr.number, commit_ci.commit.title) for (pr, commit_ci) in a.reverse()]))
 
