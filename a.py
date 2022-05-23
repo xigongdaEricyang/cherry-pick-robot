@@ -40,7 +40,7 @@ if __name__ == "__main__":
     # print(len(list(filter(lambda x: x == '10', arr))))
 
     a = [1,2,3]
-    a.reverse()
+    a.append(4)
     print(a)
     # print(">>> pr total: {}".format([(pr.number, commit_ci.commit.title) for (pr, commit_ci) in a.reverse()]))
 

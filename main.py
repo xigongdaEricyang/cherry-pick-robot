@@ -160,6 +160,7 @@ def generate_latest_200_commits(repo):
         print(">>> commit: {}".format(commit.title))
         if commit.is_valid():
             latest_200_commits.append(commit)
+    print(">>>>>, commit_num, {}".format(len(latest_200_commits)))
 
 
 def pr_ref(repo, pr):
