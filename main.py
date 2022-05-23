@@ -320,7 +320,7 @@ def get_need_sync_prs(repo):
             err = str(e)
             print(">>> Fail to get pr {} cause: {} ".format(pr_num, err))
     prs.reverse()          
-    print(">>> pr total: {}".format([(pr.number, commit_ci.commit.title) for (pr, commit_ci) in prs]))
+    print(">>> pr total: {}".format([(pr.number, commit_ci.title) for (pr, commit_ci) in prs]))
     return prs
 
 
@@ -374,7 +374,7 @@ def generate_pr(repo, pr, label, commit_ci):
             return (False, new_pr)
         if should_auto_merge == 'true':
             commit_title = "{} (#{})".format(
-                commit_ci.commit.title, new_pr.number)
+                commit_ci.title, new_pr.number)
             status = new_pr.merge(merge_method='squash',
                                   commit_title=commit_title)
             if not status.merged:
