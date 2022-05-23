@@ -310,8 +310,8 @@ def get_need_sync_prs(repo):
             labels = get_cherry_pick_pr_labels(pr)
             if len(labels) > 0:
                 prs.append((pr, commit_ci))
-    print(">>> pr num1111: {}".format(len(prs)))
-    print(">>> pr total: {}".format([(pr.number, commit_ci.commit.title) for pr in prs.reverse()]))
+    print(">>> pr num 111: {}".format(len(prs)))          
+    print(">>> pr total: {}".format([(pr.number, commit_ci.commit.title) for (pr, commit_ci) in prs.reverse()]))
     return prs.reverse()
 
 
