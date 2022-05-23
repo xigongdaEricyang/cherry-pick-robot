@@ -286,8 +286,8 @@ def get_cherry_pick_pr_labels(pr):
         label.name for label in pr_labels if prLabelRegex.match(label.name)]
     alreadyPickedLabels = [label.name for label in pr_labels if label.name.startswith(
         already_auto_pick_prefix)]
-    print("pr_num:{}, labels, {}".format(pr.number,labels))
-    print("pr_num:{}, alreadyPickedLabels, {}".format(pr.number,alreadyPickedLabels))
+    # print("pr_num:{}, labels, {}".format(pr.number,labels))
+    # print("pr_num:{}, alreadyPickedLabels, {}".format(pr.number,alreadyPickedLabels))
     newLabels = getNotAutoPickedLables(labels, alreadyPickedLabels)
     print("pr_num:{}, newLabels, {}".format(pr.number,newLabels))
     return newLabels
