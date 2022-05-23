@@ -310,7 +310,7 @@ def get_need_sync_prs(repo):
     for commit_ci in latest_100_commits:
         pr_num = commit_ci.pr_num
         print(">>> commit_ci.pr_num: {}".format(pr_num))
-        if commit_ci.is_valid():
+        if pr_num > 0:
           pr = repo.get_pull(pr_num)
           labels = get_cherry_pick_pr_labels(pr)
           if len(labels) > 0:
