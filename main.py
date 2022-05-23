@@ -309,8 +309,9 @@ def get_need_sync_prs(repo):
             pr = repo.get_pull(pr_num)
             labels = get_cherry_pick_pr_labels(pr)
             if len(labels) > 0:
-                prs.append([pr, commit_ci])
-    print(">>> pr total: {}".format([[pr.number, commit_ci.commit.title] for pr in prs.reverse()]))
+                prs.append((pr, commit_ci))
+    print(">>> pr num1111: {}".format(len(prs)))
+    print(">>> pr total: {}".format([(pr.number, commit_ci.commit.title) for pr in prs.reverse()]))
     return prs.reverse()
 
 
@@ -380,13 +381,13 @@ def cherryPickByPrNum(repo, pr_num):
     pr = repo.get_pull(pr_num)
     for commit_ci in latest_200_commits:
         if commit_ci.pr_num == pr_num:
-          return cherryPickPr(repo, [[pr, commit_ci]])
+          return cherryPickPr(repo, [(pr, commit_ci)])
 
 # need_sync_prs types is [pr, commit]
 def cherryPickPr(cur_repo, need_sync_prs):
     succ_pr_list = []
     err_pr_list = []
-    for [pr, commit_ci] in need_sync_prs:
+    for (pr, commit_ci) in need_sync_prs:
         print("<<< head: {}, {}".format(pr.head.repo, pr.head.ref))
         labels = get_cherry_pick_pr_labels(pr)
         print("<<< labels1111: {}".format(labels))
@@ -410,7 +411,7 @@ def cherryPickPr(cur_repo, need_sync_prs):
 
 def cherryPickAllPrs(cur_repo):
     need_sync_prs = get_need_sync_prs(cur_repo)
-    print(f">>> Need Sync PRs: {[pr.title for pr in need_sync_prs]}")
+    # print(f">>> Need Sync PRs: {[pr.title for pr in need_sync_prs]}")
     cherryPickPr(cur_repo, need_sync_prs)
 
 
