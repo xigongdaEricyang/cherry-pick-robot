@@ -35,6 +35,9 @@ title_re = re.compile(r"(.*)(?:$|\n).*")
 prLabelRegex = re.compile(label_regex)
 already_auto_pick_prefix = "already-auto-picked"
 
+latest_200_commits = []
+
+
 class Commit:
     def __init__(self, commit=None):
         self.commit = commit
@@ -82,30 +85,31 @@ def conflict_file_list(lines):
     prefix = "CONFLICT (content): Merge conflict in "
     return [l[len(prefix):] for l in lines if l.startswith(prefix)]
 
+
 def update_submodule(submodule_path):
     print(">>> INPUT_SUBMODULE_PATH111: {}".format(submodule_path))
     try:
-      git.checkout("-q")
-      git.submodule("update", "--", submodule_path)
+        git.checkout("-q")
+        git.submodule("update", "--", submodule_path)
     except sh.ErrorReturnCode as e:
-      err = str(e)
-      print(">>> Fail to aupdate_submodule {}, cause: {}".format(
-                    submodule_path, err))
+        err = str(e)
+        print(">>> Fail to aupdate_submodule {}, cause: {}".format(
+            submodule_path, err))
+
 
 def add_remote_url(repo):
     remote_url = 'https://github.com/{}.git'.format(repo.full_name)
     try:
-      remote_name = repo.owner.login
-      git.remote("add", remote_name, remote_url)
-      git.fetch(remote_name)
+        remote_name = repo.owner.login
+        git.remote("add", remote_name, remote_url)
+        git.fetch(remote_name)
     except Exception as e:
-      print(">>> Fail to get remote_name, cause{}".format(str(e)))
-    
+        print(">>> Fail to get remote_name, cause{}".format(str(e)))
 
-def apply_patch(pr, baseBranch, branch, commits):
+
+def apply_patch(pr, baseBranch, branch, comm_ci):
     print(f">>> Apply patch file to {branch}")
     stopped = False
-    comm_ci = commits[0] 
     cur_author = comm_ci.author()
     print(">>>> user.name: {}, user.email: {}".format(
         cur_author.name, cur_author.email))
@@ -117,13 +121,13 @@ def apply_patch(pr, baseBranch, branch, commits):
     git.checkout("-b", branch, "origin/{}".format(baseBranch))
     submodule_path = os.environ["INPUT_SUBMODULE_PATH"]
     if submodule_path:
-      update_submodule(submodule_path)
+        update_submodule(submodule_path)
     if pr.base.repo.full_name != pr.head.repo.full_name:
-      add_remote_url(pr.head.repo)
+        add_remote_url(pr.head.repo)
     conflict_files = []
-    time.sleep(500000)
+    git_commit = comm_ci.commit
     try:
-        git('cherry-pick', *[ci.commit.sha for ci in commits])
+        git('cherry-pick', git_commit.sha)
     except sh.ErrorReturnCode as e:
         err = str(e)
         if err.find('git commit --allow-empty') >= 0:
@@ -135,9 +139,8 @@ def apply_patch(pr, baseBranch, branch, commits):
             if err.find('more, please see e.stdout') >= 0:
                 err = e.stdout.decode()
             conflict_files = conflict_file_list(err.splitlines())
-            commit_changes(ci)
+            commit_changes(comm_ci)
             stopped = True
-        
 
     try:
         git.push("-u", "origin", branch, "-f")
@@ -146,15 +149,17 @@ def apply_patch(pr, baseBranch, branch, commits):
 
     return (stopped, conflict_files)
 
-def generate_latest_100_commits(repo):
-    commits = []
+
+def generate_latest_200_commits(repo):
+    # commits = []
+    latest_200_commits = []
     for i, ci in enumerate(repo.get_commits()):
-        if i > 100:
+        if i > 200:
             break
         commit = Commit(repo.get_commit(ci.sha))
         if commit.is_valid():
-            commits.append(commit)
-    return commits
+            latest_200_commits.append(commit)
+
 
 def pr_ref(repo, pr):
     pr_num = pr if isinstance(pr, int) else pr.number
@@ -243,23 +248,26 @@ def add_repo_upstream(repo):
         print(">>> Fail to add remote, cause: {}".format(e))
         raise
 
-def generare_sort_cmp(repo):
-    pr_sorted_list = [commit.pr_num for commit in generate_latest_100_commits(repo)]
-    print(">>>> sotred pr num list: {}".format(pr_sorted_list))
-    def sort_cmp(pr1, pr2):
-        if pr1.number not in pr_sorted_list: 
-          return 1
-        if pr2.number not in pr_sorted_list:
-          return -1
-        pr1_index = pr_sorted_list.index(pr1.number)
-        pr2_index = pr_sorted_list.index(pr2.number)
-        if pr1_index < pr2_index:
-            return -1
-        if pr1_index > pr2_index:
-            return 1
-        return 0     
-    return sort_cmp 
-    
+
+# def generare_sort_cmp(pr1, pr2):
+    # pr_sorted_list = [
+    #     commit.pr_num for commit in latest_200_commits]
+    # print(">>>> sotred pr num list: {}".format(pr_sorted_list))
+
+    # def sort_cmp(pr1, pr2):
+    #     if pr1.number not in pr_sorted_list:
+    #         return 1
+    #     if pr2.number not in pr_sorted_list:
+    #         return -1
+    #     pr1_index = pr_sorted_list.index(pr1.number)
+    #     pr2_index = pr_sorted_list.index(pr2.number)
+    #     if pr1_index < pr2_index:
+    #         return -1
+    #     if pr1_index > pr2_index:
+    #         return 1
+    #     return 0
+
+
 def getNotAutoPickedLables(labels, alreadyPickedLabels):
     newLabels = []
     for label in labels:
@@ -268,10 +276,13 @@ def getNotAutoPickedLables(labels, alreadyPickedLabels):
             newLabels.append(label)
     return newLabels
 
+
 def get_cherry_pick_pr_labels(pr):
     pr_labels = pr.get_labels()
-    labels = [label.name for label in pr_labels if prLabelRegex.match(label.name)]
-    alreadyPickedLabels = [label.name for label in pr_labels if label.name.startswith(already_auto_pick_prefix)]
+    labels = [
+        label.name for label in pr_labels if prLabelRegex.match(label.name)]
+    alreadyPickedLabels = [label.name for label in pr_labels if label.name.startswith(
+        already_auto_pick_prefix)]
     # print("pr_num:{}, labels, {}".format(pr.number,labels))
     # print("pr_num:{}, alreadyPickedLabels, {}".format(pr.number,alreadyPickedLabels))
     newLabels = getNotAutoPickedLables(labels, alreadyPickedLabels)
@@ -279,60 +290,68 @@ def get_cherry_pick_pr_labels(pr):
     return newLabels
 
 # old commit merged first
-def sort_pr(repo, prs):
-    sorted_prs = sorted(prs, key=functools.cmp_to_key(generare_sort_cmp(repo)), reverse=True)
-    print(f">>> sorted pr list: ".format([pr.number for pr in sorted_prs]))
-    return sorted_prs
+
+
+# def sort_pr(repo, prs):
+#     sorted_prs = sorted(prs, key=functools.cmp_to_key(
+#         generare_sort_cmp(repo)), reverse=True)
+#     print(f">>> sorted pr list: ".format([pr.number for pr in sorted_prs]))
+#     return sorted_prs
 
 # max 100 prs
+
+
 def get_need_sync_prs(repo):
     prs = []
-    for i, pr in enumerate(repo.get_pulls(state='closed', sort='updated', direction='desc', base='master')):
-        if i > 200:
-            break
-        if len(get_cherry_pick_pr_labels(pr)) > 0:
-            prs.append(pr)
-    print(">>> pr total: {}".format([pr.number for pr in prs]))
-    return sort_pr(repo, prs)
+    for commit in latest_200_commits:
+        pr_num = commit.pr_num
+        if pr_num > 0:
+            pr = repo.get_pull(pr_num)
+            labels = get_cherry_pick_pr_labels(pr)
+            if len(labels) > 0:
+                prs.append([pr, commit])
+    print(">>> pr total: {}".format([[pr.number, commit.title] for pr in prs.reverse()]))
+    return prs.reverse()
 
 
-def generated_commits(repo, pr):
-    commits = []
-    for ci in pr.get_commits():
-        commit = Commit(repo.get_commit(ci.sha))
-        if commit.is_valid():
-            commits.append(commit)
-    return commits
+# def generated_commits(repo, pr):
+#     commits = []
+#     for ci in pr.get_commits():
+#         commit = Commit(repo.get_commit(ci.sha))
+#         if commit.is_valid():
+#             commits.append(commit)
+#     return commits
+
 
 def getFullVersion(label):
-  if label.startswith('cherry-pick-'):
-    return label[len('cherry-pick-'):][1:]
-  if label.endswith('-cherry-pick'):
-    return label[:-len('-cherry-pick')][1:]
+    if label.startswith('cherry-pick-'):
+        return label[len('cherry-pick-'):][1:]
+    if label.endswith('-cherry-pick'):
+        return label[:-len('-cherry-pick')][1:]
+
 
 def getBaseBranch(repo, label):
     full_version = getFullVersion(label)
     try:
-      base_branch = 'release-{}'.format(full_version)
-      repo.get_branch(base_branch)
-      return base_branch
-    except:
-      base_branch = 'v{}'.format(full_version)
-      try:
+        base_branch = 'release-{}'.format(full_version)
         repo.get_branch(base_branch)
         return base_branch
-      except:
-        raise Exception('base branch not found, label: {}'.format(label))
+    except:
+        base_branch = 'v{}'.format(full_version)
+        try:
+            repo.get_branch(base_branch)
+            return base_branch
+        except:
+            raise Exception('base branch not found, label: {}'.format(label))
 
-def generate_pr(repo, pr, label):
+
+def generate_pr(repo, pr, label, commit):
     try:
         baseBranch = getBaseBranch(repo, label)
         branch = "auto-pick-{}-to-{}".format(pr.number, baseBranch)
         new_pr_title = "[auto-pick-to-{}]{}".format(baseBranch, pr.title)
         body = append_cherry_pick_in_msg(repo, pr)
-        commits = generated_commits(repo, pr)
-        print(">>> commits: {}".format([ci.commit.sha for ci in commits]))
-        stopped, conflict_files = apply_patch(pr, baseBranch, branch, commits)
+        stopped, conflict_files = apply_patch(pr, baseBranch, branch, commit)
         new_pr = repo.create_pull(
             title=new_pr_title, body=body, head=branch, base=baseBranch)
         print(f">>> Create PR: {pr_link(repo, new_pr)}")
@@ -340,48 +359,60 @@ def generate_pr(repo, pr, label):
         new_pr = repo.get_pull(new_pr.number)
         new_pr.add_to_labels('auto-pick-robot')
         if stopped:
-          return (False, new_pr)
+            return (False, new_pr)
         if not new_pr.mergeable:
-          return (False, new_pr)
+            return (False, new_pr)
         if should_auto_merge == 'true':
-          commit_title = "{} (#{})".format(commits[0].commit.title, new_pr.number)
-          status = new_pr.merge(merge_method='squash', commit_title=commit_title)
-          if not status.merged:
-              return (False, new_pr)
-        pr.add_to_labels('{}-{}'.format(already_auto_pick_prefix, getFullVersion(label)))
+            commit_title = "{} (#{})".format(
+                commit.commit.title, new_pr.number)
+            status = new_pr.merge(merge_method='squash',
+                                  commit_title=commit_title)
+            if not status.merged:
+                return (False, new_pr)
+        pr.add_to_labels(
+            '{}-{}'.format(already_auto_pick_prefix, getFullVersion(label)))
         return (True, new_pr)
     except Exception as e:
         print(">>> Fail to merge PR {}, cause: {}".format(pr.number, e))
 
+
 def cherryPickByPrNum(repo, pr_num):
     pr = repo.get_pull(pr_num)
-    cherryPickPr(repo, [pr])
+    for commit_ci in latest_200_commits:
+        if commit_ci.pr_num == pr_num:
+          return cherryPickPr(repo, [[pr, commit_ci]])
 
+# need_sync_prs types is [pr, commit]
 def cherryPickPr(cur_repo, need_sync_prs):
     succ_pr_list = []
     err_pr_list = []
-    for pr in need_sync_prs:
+    for [pr, commit] in need_sync_prs:
         print("<<< head: {}, {}".format(pr.head.repo, pr.head.ref))
         labels = get_cherry_pick_pr_labels(pr)
         print("<<< labels1111: {}".format(labels))
         for label in labels:
-          res = generate_pr(cur_repo, pr, label)
-          md = pr_link(cur_repo, pr)
-          if res is not None:
-            if res[1].number >= 0:
-                md += " -> " + pr_link(cur_repo, res[1])
-            if res[0]:
-                succ_pr_list.append(md)
-                print(f">>> {pr_ref(cur_repo, res[1])} has been migrated from {pr_ref(cur_repo, pr)}")
-            else:
-                err_pr_list.append(md)
-                print(f">>> {pr_ref(cur_repo, pr)} could not be merged into {pr_ref(cur_repo, res[1])}")
-    print(">>> {} PRs need to sync, created {}, failed {}".format(len(need_sync_prs), len(succ_pr_list), len(err_pr_list)))
+            res = generate_pr(cur_repo, pr, label, commit)
+            md = pr_link(cur_repo, pr)
+            if res is not None:
+                if res[1].number >= 0:
+                    md += " -> " + pr_link(cur_repo, res[1])
+                if res[0]:
+                    succ_pr_list.append(md)
+                    print(
+                        f">>> {pr_ref(cur_repo, res[1])} has been migrated from {pr_ref(cur_repo, pr)}")
+                else:
+                    err_pr_list.append(md)
+                    print(
+                        f">>> {pr_ref(cur_repo, pr)} could not be merged into {pr_ref(cur_repo, res[1])}")
+    print(">>> {} PRs need to sync, created {}, failed {}".format(
+        len(need_sync_prs), len(succ_pr_list), len(err_pr_list)))
+
 
 def cherryPickAllPrs(cur_repo):
     need_sync_prs = get_need_sync_prs(cur_repo)
     print(f">>> Need Sync PRs: {[pr.title for pr in need_sync_prs]}")
     cherryPickPr(cur_repo, need_sync_prs)
+
 
 if __name__ == "__main__":
     cur_repo = os.environ["GITHUB_REPOSITORY"]
@@ -389,8 +420,9 @@ if __name__ == "__main__":
     repo = gh.get_repo(cur_repo)
     print(">>> From: {}".format(cur_repo))
     add_repo_upstream(repo)
+    generate_latest_200_commits(repo)
     # print(">>> pr_num, {}".format(pr_num))
     if pr_num:
-      cherryPickByPrNum(repo, pr_num)
+        cherryPickByPrNum(repo, pr_num)
     else:
-      cherryPickAllPrs(repo)
+        cherryPickAllPrs(repo)
