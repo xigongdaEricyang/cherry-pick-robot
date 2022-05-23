@@ -35,7 +35,7 @@ title_re = re.compile(r"(.*)(?:$|\n).*")
 prLabelRegex = re.compile(label_regex)
 already_auto_pick_prefix = "already-auto-picked"
 
-latest_200_commits = []
+latest_100_commits = []
 
 
 class Commit:
@@ -150,18 +150,18 @@ def apply_patch(pr, baseBranch, branch, comm_ci):
     return (stopped, conflict_files)
 
 
-def generate_latest_200_commits(repo):
+def generate_latest_100_commits(repo):
     # commits = []
-    global latest_200_commits
-    latest_200_commits = []
+    global latest_100_commits
+    latest_100_commits = []
     for i, ci in enumerate(repo.get_commits()):
-        if i > 200:
+        if i > 100:
             break
         commit = Commit(repo.get_commit(ci.sha))
         # print(">>> commit: {}".format(commit.title))
         if commit.is_valid():
-            latest_200_commits.append(commit)
-    # print(">>>>>, commit_num, {}".format(len(latest_200_commits)))
+            latest_100_commits.append(commit)
+    # print(">>>>>, commit_num, {}".format(len(latest_100_commits)))
 
 
 def pr_ref(repo, pr):
@@ -307,7 +307,7 @@ def get_cherry_pick_pr_labels(pr):
 def get_need_sync_prs(repo):
     prs = []
     pr_nums = []
-    for commit_ci in latest_200_commits:
+    for commit_ci in latest_100_commits:
         pr_num = commit_ci.pr_num
         # pr_nums.append(pr_num)
         pr = repo.get_pull(pr_num)
@@ -386,7 +386,7 @@ def generate_pr(repo, pr, label, commit_ci):
 
 def cherryPickByPrNum(repo, pr_num):
     pr = repo.get_pull(pr_num)
-    for commit_ci in latest_200_commits:
+    for commit_ci in latest_100_commits:
         if commit_ci.pr_num == pr_num:
           return cherryPickPr(repo, [(pr, commit_ci)])
 
@@ -428,7 +428,7 @@ if __name__ == "__main__":
     repo = gh.get_repo(cur_repo)
     print(">>> From: {}".format(cur_repo))
     add_repo_upstream(repo)
-    generate_latest_200_commits(repo)
+    generate_latest_100_commits(repo)
     # print(">>> pr_num, {}".format(pr_num))
     if pr_num:
         cherryPickByPrNum(repo, pr_num)
