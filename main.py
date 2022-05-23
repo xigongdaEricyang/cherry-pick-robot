@@ -303,14 +303,14 @@ def get_cherry_pick_pr_labels(pr):
 
 def get_need_sync_prs(repo):
     prs = []
-    for commit in latest_200_commits:
-        pr_num = commit.pr_num
+    for commit_ci in latest_200_commits:
+        pr_num = commit_ci.pr_num
         if pr_num > 0:
             pr = repo.get_pull(pr_num)
             labels = get_cherry_pick_pr_labels(pr)
             if len(labels) > 0:
-                prs.append([pr, commit])
-    print(">>> pr total: {}".format([[pr.number, commit.title] for pr in prs.reverse()]))
+                prs.append([pr, commit_ci])
+    print(">>> pr total: {}".format([[pr.number, commit_ci.commit.title] for pr in prs.reverse()]))
     return prs.reverse()
 
 
@@ -345,13 +345,13 @@ def getBaseBranch(repo, label):
             raise Exception('base branch not found, label: {}'.format(label))
 
 
-def generate_pr(repo, pr, label, commit):
+def generate_pr(repo, pr, label, commit_ci):
     try:
         baseBranch = getBaseBranch(repo, label)
         branch = "auto-pick-{}-to-{}".format(pr.number, baseBranch)
         new_pr_title = "[auto-pick-to-{}]{}".format(baseBranch, pr.title)
         body = append_cherry_pick_in_msg(repo, pr)
-        stopped, conflict_files = apply_patch(pr, baseBranch, branch, commit)
+        stopped, conflict_files = apply_patch(pr, baseBranch, branch, commit_ci)
         new_pr = repo.create_pull(
             title=new_pr_title, body=body, head=branch, base=baseBranch)
         print(f">>> Create PR: {pr_link(repo, new_pr)}")
@@ -364,7 +364,7 @@ def generate_pr(repo, pr, label, commit):
             return (False, new_pr)
         if should_auto_merge == 'true':
             commit_title = "{} (#{})".format(
-                commit.commit.title, new_pr.number)
+                commit_ci.commit.title, new_pr.number)
             status = new_pr.merge(merge_method='squash',
                                   commit_title=commit_title)
             if not status.merged:
@@ -386,12 +386,12 @@ def cherryPickByPrNum(repo, pr_num):
 def cherryPickPr(cur_repo, need_sync_prs):
     succ_pr_list = []
     err_pr_list = []
-    for [pr, commit] in need_sync_prs:
+    for [pr, commit_ci] in need_sync_prs:
         print("<<< head: {}, {}".format(pr.head.repo, pr.head.ref))
         labels = get_cherry_pick_pr_labels(pr)
         print("<<< labels1111: {}".format(labels))
         for label in labels:
-            res = generate_pr(cur_repo, pr, label, commit)
+            res = generate_pr(cur_repo, pr, label, commit_ci)
             md = pr_link(cur_repo, pr)
             if res is not None:
                 if res[1].number >= 0:
