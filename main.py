@@ -414,6 +414,9 @@ def cherryPickPr(cur_repo, need_sync_prs):
                     err_pr_list.append(md)
                     print(
                         f">>> {pr_ref(cur_repo, pr)} could not be merged into {pr_ref(cur_repo, res[1])}")
+                    break
+        break
+        
     print(">>> {} PRs need to sync, created {}, failed {}".format(
         len(need_sync_prs), len(succ_pr_list), len(err_pr_list)))
 
