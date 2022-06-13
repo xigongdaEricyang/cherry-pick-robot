@@ -381,7 +381,6 @@ def generate_pr(repo, pr, label, commit_ci):
         
         if stopped:            
             notify_author_by_comment(repo,
-                baseBranch,
                 commit_ci,
                 new_pr.number,
                 commit_ci.pr_num,
