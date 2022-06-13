@@ -396,6 +396,7 @@ def cherryPickByPrNum(repo, pr_num):
 def cherryPickPr(cur_repo, need_sync_prs):
     succ_pr_list = []
     err_pr_list = []
+    flag = 0 
     for (pr, commit_ci) in need_sync_prs:
         print("<<< head: {}, {}".format(pr.head.repo, pr.head.ref))
         labels = get_cherry_pick_pr_labels(pr)
@@ -412,10 +413,12 @@ def cherryPickPr(cur_repo, need_sync_prs):
                         f">>> {pr_ref(cur_repo, res[1])} has been migrated from {pr_ref(cur_repo, pr)}")
                 else:
                     err_pr_list.append(md)
+                    flag = 1
                     print(
                         f">>> {pr_ref(cur_repo, pr)} could not be merged into {pr_ref(cur_repo, res[1])}")
                     break
-        break
+        if flag == 1:
+            break
         
     print(">>> {} PRs need to sync, created {}, failed {}".format(
         len(need_sync_prs), len(succ_pr_list), len(err_pr_list)))
