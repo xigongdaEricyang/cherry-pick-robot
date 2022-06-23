@@ -416,8 +416,7 @@ def cherryPickByPrNum(repo, pr_num):
 def cherryPickPr(cur_repo, need_sync_prs):
     succ_pr_list = []
     err_pr_list = []
-    flag = 0
-    
+    flag = 0 
     for (pr, commit_ci) in need_sync_prs:
         print("<<< head: {}, {}".format(pr.head.repo, pr.head.ref))
         labels = get_cherry_pick_pr_labels(pr)
@@ -440,14 +439,6 @@ def cherryPickPr(cur_repo, need_sync_prs):
                     break
         if flag == 1:
             break
-            
-    succ_prs = '\n\n'.join(succ_pr_list) if succ_pr_list else "None"
-    err_prs = '\n\n'.join(err_pr_list) if err_pr_list else "None"
-
-    print(">>> Enable dingtalk notification: {}".format(enable_dingtalk_notification))
-    if enable_dingtalk_notification and (len(succ_pr_list) > 0 or len(err_pr_list) > 0):
-        text = f"### Auto Cherry Pick Status\nPick successfully:\n\n{succ_prs}\n\nFailed to pick:\n\n{err_prs}"
-        dingtalk_bot.send_markdown(title='Auto Cherry Pick Status', text=text, is_at_all=False)
         
     print(">>> {} PRs need to sync, created {}, failed {}".format(
         len(need_sync_prs), len(succ_pr_list), len(err_pr_list)))
