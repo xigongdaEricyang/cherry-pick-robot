@@ -9,18 +9,18 @@ import time
 
 from pathlib import Path
 from github import Github
-# from dingtalkchatbot.chatbot import DingtalkChatbot
+from dingtalkchatbot.chatbot import DingtalkChatbot
 from sh import git
 from datetime import datetime
 
 
-# dingtalk_access_token = os.environ["INPUT_DINGTALK_ACCESS_TOKEN"]
-# dingtalk_secret = os.environ["INPUT_DINGTALK_SECRET"]
-# enable_dingtalk_notification = len(dingtalk_access_token) > 0 and len(dingtalk_secret) > 0
-# dingtalk_bot = DingtalkChatbot(
-#     webhook=f"https://oapi.dingtalk.com/robot/send?access_token={dingtalk_access_token}",
-#     secret=dingtalk_secret,
-# )
+dingtalk_access_token = os.environ["INPUT_DINGTALK_ACCESS_TOKEN"]
+dingtalk_secret = os.environ["INPUT_DINGTALK_SECRET"]
+enable_dingtalk_notification = len(dingtalk_access_token) > 0 and len(dingtalk_secret) > 0
+dingtalk_bot = DingtalkChatbot(
+     webhook=f"https://oapi.dingtalk.com/robot/send?access_token={dingtalk_access_token}",
+     secret=dingtalk_secret,
+)
 
 gh_url = "https://github.com"
 
@@ -191,7 +191,7 @@ def append_cherry_pick_in_msg(repo, pr):
     return "{}\nCherry-pick from {}\n\n".format(body, pr_link(repo, pr))
 
 
-def notify_author_by_comment(ent_repo, comm_repo, comm_ci, issue_num, comm_pr_num, org_members, conflict_files):
+def notify_author_by_comment(repo, comm_ci, issue_num, comm_pr_num, org_members, conflict_files):
     comment = ""
     if comm_ci.login() in org_members:
         comment += f"@{comm_ci.login()}\n"
@@ -222,9 +222,9 @@ CONFLICT FILES:
 ```
 """
 
-    issue = ent_repo.get_issue(issue_num)
-    issue.create_comment(comment.format(ent_repo.full_name,
-                                        ent_repo.name,
+    issue = repo.get_issue(issue_num)
+    issue.create_comment(comment.format(repo.full_name,
+                                        repo.name,
                                         issue_num,
                                         comm_pr_num,
                                         comm_pr_num,
@@ -332,6 +332,15 @@ def get_need_sync_prs(repo):
 #             commits.append(commit)
 #     return commits
 
+def get_org_name(repo):
+    l = repo.split('/')
+    assert len(l) == 2
+    return l[0]
+
+def get_org_members(org_name):
+    print(">>> Get org members")
+    org = gh.get_organization(org_name)
+    return [m.login for m in org.get_members()]
 
 def getFullVersion(label):
     if label.startswith('cherry-pick-'):
@@ -357,6 +366,7 @@ def getBaseBranch(repo, label):
 
 def generate_pr(repo, pr, label, commit_ci):
     try:
+        org_members = get_org_members(get_org_name(repo))
         baseBranch = getBaseBranch(repo, label)
         branch = "auto-pick-{}-to-{}".format(pr.number, baseBranch)
         new_pr_title = "[auto-pick-to-{}]{}".format(baseBranch, pr.title)
@@ -368,10 +378,19 @@ def generate_pr(repo, pr, label, commit_ci):
         time.sleep(2)
         new_pr = repo.get_pull(new_pr.number)
         new_pr.add_to_labels('auto-pick-robot')
-        if stopped:
+        
+        if stopped:            
+            notify_author_by_comment(repo,
+                commit_ci,
+                new_pr.number,
+                commit_ci.pr_num,
+                org_members,
+                conflict_files)
             return (False, new_pr)
+        
         if not new_pr.mergeable:
             return (False, new_pr)
+        
         if should_auto_merge == 'true':
             commit_title = "{} (#{})".format(
                 commit_ci.title, new_pr.number)
@@ -382,6 +401,7 @@ def generate_pr(repo, pr, label, commit_ci):
         pr.add_to_labels(
             '{}-{}'.format(already_auto_pick_prefix, getFullVersion(label)))
         return (True, new_pr)
+    
     except Exception as e:
         print(">>> Fail to merge PR {}, cause: {}".format(pr.number, e))
 
@@ -400,7 +420,7 @@ def cherryPickPr(cur_repo, need_sync_prs):
     for (pr, commit_ci) in need_sync_prs:
         print("<<< head: {}, {}".format(pr.head.repo, pr.head.ref))
         labels = get_cherry_pick_pr_labels(pr)
-        print("<<< labels1111: {}".format(labels))
+        print("<<< labels: {}".format(labels))
         for label in labels:
             res = generate_pr(cur_repo, pr, label, commit_ci)
             md = pr_link(cur_repo, pr)
@@ -437,7 +457,6 @@ if __name__ == "__main__":
     print(">>> From: {}".format(cur_repo))
     add_repo_upstream(repo)
     generate_latest_100_commits(repo)
-    # print(">>> pr_num, {}".format(pr_num))
     if pr_num:
         cherryPickByPrNum(repo, pr_num)
     else:
