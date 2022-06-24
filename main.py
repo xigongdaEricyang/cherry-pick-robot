@@ -384,6 +384,8 @@ def generate_pr(repo, pr, label, commit_ci):
         return (True, new_pr)
     except Exception as e:
         print(">>> Fail to merge PR {}, cause: {}".format(pr.number, e))
+        return (False, new_pr)
+
 
 
 def cherryPickByPrNum(repo, pr_num):
