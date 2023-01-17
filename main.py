@@ -32,7 +32,7 @@ gh = Github(token)
 prog = re.compile(r"(.*)\(#(\d+)\)(?:$|\n).*")
 title_re = re.compile(r"(.*)(?:$|\n).*")
 # version_label_re = re.compile(r"^v[0-9]*\.[0-9]*(.[0-9])?")
-prLabelRegex = re.compile(label_regex)
+prLabelRegex = re.compile(r"cherry-pick-to-*")
 already_auto_pick_prefix = "already-auto-picked"
 
 latest_100_commits = []
@@ -334,16 +334,12 @@ def get_need_sync_prs(repo):
 
 
 def getFullVersion(label):
-    if label.startswith('cherry-pick-'):
-        return label[len('cherry-pick-'):][1:]
-    if label.endswith('-cherry-pick'):
-        return label[:-len('-cherry-pick')][1:]
-
+    return label[len("cherry-pick-to-"):][1:]
 
 def getBaseBranch(repo, label):
     full_version = getFullVersion(label)
     try:
-        base_branch = 'release-{}'.format(full_version)
+        base_branch = full_version
         repo.get_branch(base_branch)
         return base_branch
     except:
@@ -357,7 +353,7 @@ def getBaseBranch(repo, label):
 
 def generate_pr(repo, pr, label, commit_ci):
     try:
-        baseBranch = "master"
+        baseBranch = getBaseBranch(repo, label)
         branch = "auto-pick-{}-to-{}".format(pr.number, baseBranch)
         new_pr_title = "[auto-pick-to-{}]{}".format(baseBranch, pr.title)
         body = append_cherry_pick_in_msg(repo, pr)
