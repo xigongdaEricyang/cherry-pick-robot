@@ -357,7 +357,7 @@ def getBaseBranch(repo, label):
 
 def generate_pr(repo, pr, label, commit_ci):
     try:
-        baseBranch = getBaseBranch(repo, label)
+        baseBranch = "master"
         branch = "auto-pick-{}-to-{}".format(pr.number, baseBranch)
         new_pr_title = "[auto-pick-to-{}]{}".format(baseBranch, pr.title)
         body = append_cherry_pick_in_msg(repo, pr)
