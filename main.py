@@ -335,7 +335,7 @@ def get_need_sync_prs(repo):
 
 
 def getFullVersion(label):
-    return label[len("cherry-pick-to-"):][1:]
+    return label[len("cherry-pick-to-"):]
 
 def getBaseBranch(repo, label):
     full_version = getFullVersion(label)
@@ -344,13 +344,7 @@ def getBaseBranch(repo, label):
         repo.get_branch(base_branch)
         return base_branch
     except:
-        base_branch = 'v{}'.format(full_version)
-        try:
-            repo.get_branch(base_branch)
-            return base_branch
-        except:
-            raise Exception('base branch not found, label: {}'.format(label))
-
+        raise Exception('base branch not found, label: {}, base branch is: {}'.format(label), base_branch)
 
 def generate_pr(repo, pr, label, commit_ci):
     try:

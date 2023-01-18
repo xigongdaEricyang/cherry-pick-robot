@@ -16,23 +16,17 @@ import re
 #     return 0 
 
 def getFullVersion(label):
-  if label.startswith('cherry-pick-'):
-    return label[len('cherry-pick-'):][1:]
-  if label.endswith('-cherry-pick'):
-    return label[:-len('-cherry-pick')][1:]
+    return label[len("cherry-pick-to-"):]
 
-def new_func(a):
-    a.append(4)
-    print(a)
 
 if __name__ == "__main__":
     # label_regex = '^cherry-pick-v[0-9]*\.[0-9]*(.[0-9])?$'
     # label_regex = '^v[0-9]*\.[0-9]*(.[0-9])?-cherry-pick$'
     # version_label_re = re.compile(r"v[0-9]*\.[0-9]*(.[0-9])?")
     # # label_regex = 'cherry-pick-v3.1'
-    # label = 'cherry-pick-v3.1-hwpoc'
+    label = 'cherry-pick-to-master'
     # label1 = 'v3.1-cherry-pick'
-    # print(getFullVersion(label))
+    print(getFullVersion(label))
     
     # version_label_re = re.compile(r"^v[0-9]*\.[0-9]*(.[0-9])?")
     # version_label = "v2.2.0"  
@@ -43,8 +37,9 @@ if __name__ == "__main__":
     # print(sorted(pr_list, key=functools.cmp_to_key(sort_cmp)))
     # print(len(list(filter(lambda x: x == '10', arr))))
 
-    prLabelRegex = re.compile(r"cherry-pick-to-*")
-    if prLabelRegex.match("cherry-pick-to-master"):
-        print("match")
+    # prLabelRegex = re.compile(r"cherry-pick-to-*")
+    # if prLabelRegex.match("cherry-pick-to-master"):
+    #     print("match")
+
     # print(">>> pr total: {}".format([(pr.number, commit_ci.commit.title) for (pr, commit_ci) in a.reverse()]))
 
