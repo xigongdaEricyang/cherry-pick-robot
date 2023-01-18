@@ -428,7 +428,7 @@ if __name__ == "__main__":
     pr_num = os.environ["INPUT_PR_NUM"]
     repo = gh.get_repo(cur_repo)
     print(">>> From: {}".format(cur_repo))
-    add_repo_upstream(repo)
+    add_repo_upstream(repo, 'master')
     generate_latest_100_commits(repo)
     # print(">>> pr_num, {}".format(pr_num))
     if pr_num:
