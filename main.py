@@ -26,7 +26,8 @@ gh_url = "https://github.com"
 
 token = os.environ['INPUT_REPO_TOKEN']
 should_auto_merge = os.environ['INPUT_AUTO_MERGE']
-label_regex = os.environ['INPUT_PR_LABEL']
+# label_regex = os.environ['INPUT_PR_LABEL']
+from_branch = os.environ['INPUT_FROM_BRANCH']
 gh = Github(token)
 
 prog = re.compile(r"(.*)\(#(\d+)\)(?:$|\n).*")
@@ -246,7 +247,7 @@ def add_repo_upstream(repo):
         print(">>> The remote upstream({}) not found.".format(remote_name))
     try:
         # git.remote('add', remote_name, remote_url)
-        git.fetch(remote_name, 'master')
+        git.fetch(remote_name, from_branch)
     except Exception as e:
         print(">>> Fail to add remote, cause: {}".format(e))
         raise
