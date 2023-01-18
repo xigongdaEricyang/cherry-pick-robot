@@ -247,7 +247,9 @@ def add_repo_upstream(repo):
         print(">>> The remote upstream({}) not found.".format(remote_name))
     try:
         # git.remote('add', remote_name, remote_url)
-        git.fetch(remote_name, from_branch)
+        git.fetch(remote_name)
+        if from_branch != "master":
+          git.checkout("-b", from_branch, "{}/{}".format(remote_name, from_branch))
     except Exception as e:
         print(">>> Fail to add remote, cause: {}".format(e))
         raise

@@ -21,6 +21,10 @@ def getFullVersion(label):
   if label.endswith('-cherry-pick'):
     return label[:-len('-cherry-pick')][1:]
 
+def new_func(a):
+    a.append(4)
+    print(a)
+
 if __name__ == "__main__":
     # label_regex = '^cherry-pick-v[0-9]*\.[0-9]*(.[0-9])?$'
     # label_regex = '^v[0-9]*\.[0-9]*(.[0-9])?-cherry-pick$'
@@ -39,8 +43,8 @@ if __name__ == "__main__":
     # print(sorted(pr_list, key=functools.cmp_to_key(sort_cmp)))
     # print(len(list(filter(lambda x: x == '10', arr))))
 
-    a = [1,2,3]
-    a.append(4)
-    print(a)
+    prLabelRegex = re.compile(r"cherry-pick-to-*")
+    if prLabelRegex.match("cherry-pick-to-master"):
+        print("match")
     # print(">>> pr total: {}".format([(pr.number, commit_ci.commit.title) for (pr, commit_ci) in a.reverse()]))
 
