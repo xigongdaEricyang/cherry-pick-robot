@@ -247,7 +247,7 @@ def add_repo_upstream(repo):
         print(">>> The remote upstream({}) not found.".format(remote_name))
     try:
         # git.remote('add', remote_name, remote_url)
-        git.fetch(remote_name)
+        git.fetch(remote_name, 'master')
         if from_branch != "master":
           git.checkout("-b", from_branch, "{}/{}".format(remote_name, from_branch))
     except Exception as e:
@@ -428,7 +428,7 @@ if __name__ == "__main__":
     pr_num = os.environ["INPUT_PR_NUM"]
     repo = gh.get_repo(cur_repo)
     print(">>> From: {}".format(cur_repo))
-    add_repo_upstream(repo, 'master')
+    add_repo_upstream(repo)
     generate_latest_100_commits(repo)
     # print(">>> pr_num, {}".format(pr_num))
     if pr_num:
