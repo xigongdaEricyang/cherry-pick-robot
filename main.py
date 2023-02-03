@@ -120,7 +120,7 @@ def apply_patch(pr, baseBranch, branch, comm_ci):
     git.clean("-f")
     git.fetch("origin", from_branch)
     git.fetch("origin", baseBranch)
-    git.checkout("-b", branch, "origin/{}".format(baseBranch))
+    git.switch("-c", branch, "origin/{}".format(baseBranch))
     submodule_path = os.environ["INPUT_SUBMODULE_PATH"]
     if submodule_path:
         update_submodule(submodule_path)
