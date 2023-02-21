@@ -120,7 +120,7 @@ def apply_patch(pr, baseBranch, branch, comm_ci):
     git.clean("-f")
     git.fetch("origin", from_branch)
     git.fetch("origin", baseBranch)
-    # time.sleep(1000000)
+    time.sleep(1000000)
     git.switch("-c", branch, "origin/{}".format(baseBranch))
     submodule_path = os.environ["INPUT_SUBMODULE_PATH"]
     if submodule_path:
@@ -289,8 +289,8 @@ def get_cherry_pick_pr_labels(pr):
         label.name for label in pr_labels if prLabelRegex.match(label.name)]
     alreadyPickedLabels = [label.name for label in pr_labels if label.name.startswith(
         already_auto_pick_prefix)]
-    # print("pr_num:{}, labels, {}".format(pr.number,labels))
-    # print("pr_num:{}, alreadyPickedLabels, {}".format(pr.number,alreadyPickedLabels))
+    print("pr_num:{}, labels, {}".format(pr.number,labels))
+    print("pr_num:{}, alreadyPickedLabels, {}".format(pr.number,alreadyPickedLabels))
     newLabels = getNotAutoPickedLables(labels, alreadyPickedLabels)
     print("pr_num:{}, newLabels, {}".format(pr.number,newLabels))
     return newLabels

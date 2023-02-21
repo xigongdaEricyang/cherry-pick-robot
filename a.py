@@ -24,7 +24,7 @@ if __name__ == "__main__":
     # label_regex = '^v[0-9]*\.[0-9]*(.[0-9])?-cherry-pick$'
     # version_label_re = re.compile(r"v[0-9]*\.[0-9]*(.[0-9])?")
     # # label_regex = 'cherry-pick-v3.1'
-    label = 'cherry-pick-to-master'
+    label = 'cherry-pick-to-v3.2.0'
     # label1 = 'v3.1-cherry-pick'
     print(getFullVersion(label))
     
