@@ -118,10 +118,13 @@ def apply_patch(pr, baseBranch, branch, comm_ci):
     git.config("--local", "user.name", cur_author.name)
     git.config("--local", "user.email", cur_author.email)
     git.clean("-f")
-    git.fetch("origin", from_branch)
-    git.pull("origin", baseBranch)
-    # time.sleep(1000000)
-    git.switch("-c", branch, "origin/{}".format(baseBranch))
+    if from_branch == "master":
+      git.fetch("origin")
+      git.checkout("-b", branch, "origin/{}".format(baseBranch)) 
+    else:
+      git.fetch("origin", from_branch)
+      git.fetch("origin", baseBranch)
+      git.switch("-c", branch, "origin/{}".format(baseBranch))
     submodule_path = os.environ["INPUT_SUBMODULE_PATH"]
     if submodule_path:
         update_submodule(submodule_path)
