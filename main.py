@@ -119,7 +119,7 @@ def apply_patch(pr, baseBranch, branch, comm_ci):
     git.config("--local", "user.email", cur_author.email)
     git.clean("-f")
     if from_branch == "master":
-      git.fetch("origin")
+      git.fetch("origin", baseBranch)
       git.checkout("-b", branch, "origin/{}".format(baseBranch)) 
     else:
       git.fetch("origin", from_branch)
