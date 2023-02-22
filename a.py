@@ -1,7 +1,8 @@
 import functools
 import re
 import datetime
-
+import random
+import string
 
 # def sort_cmp(number1, number2):
 #     if number1 not in pr_sorted_list: 
@@ -16,7 +17,11 @@ import datetime
 #         return 1
 #     return 0 
 
-originName = 0
+origin_index = 0
+
+def random_str():
+    str = random.sample(string.ascii_letters, 3)
+    return ''.join(str)
 
 def getFullVersion(label):
     return label[len("cherry-pick-to-"):]
@@ -35,8 +40,9 @@ if __name__ == "__main__":
     label = 'cherry-pick-to-v3.2.0'
     # label1 = 'v3.1-cherry-pick'
     # print(getFullVersion(label))
-    originName += 1
-    print(originName)
+    # origin_index = origin_index + 1
+    # originName = "origin{}".format(origin_index)
+    print(random_str())
     
     # version_label_re = re.compile(r"^v[0-9]*\.[0-9]*(.[0-9])?")
     # version_label = "v2.2.0"  

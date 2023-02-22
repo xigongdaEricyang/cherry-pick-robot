@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 from email.mime import base
-import functools
 import os
 import re
-import sh
 import time
+import random
+import string
 
 from pathlib import Path
 from github import Github
@@ -37,9 +37,6 @@ prLabelRegex = re.compile(r"cherry-pick-to-*")
 already_auto_pick_prefix = "already-auto-picked"
 
 latest_100_commits = []
-
-origin_index=0
-
 
 class Commit:
     def __init__(self, commit=None):
@@ -89,6 +86,10 @@ def conflict_file_list(lines):
     return [l[len(prefix):] for l in lines if l.startswith(prefix)]
 
 
+def random_str():
+    str = random.sample(string.ascii_letters, 3)
+    return ''.join(str)
+
 def update_submodule(submodule_path):
     print(">>> INPUT_SUBMODULE_PATH111: {}".format(submodule_path))
     try:
@@ -127,8 +128,7 @@ def apply_patch(pr, baseBranch, branch, comm_ci, repo):
     git.config("--local", "user.email", cur_author.email)
     git.clean("-f")
     if from_branch == "master":
-      origin_index += 1
-      originName = "origin{}".format(origin_index)
+      originName = "origin{}".format(random_str())
       git.remote("add", originName, "https://github.com/{}.git".format(repo.full_name))
       git.fetch(originName, baseBranch, "--shallow-since={}".format(ten_days_date()))
       git.checkout("-b", branch, "{}/{}".format(originName, baseBranch)) 
