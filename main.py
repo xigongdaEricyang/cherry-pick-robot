@@ -114,7 +114,7 @@ def ten_days_date():
     return ten_days_ago_str
 
 
-def apply_patch(pr, baseBranch, branch, comm_ci):
+def apply_patch(pr, baseBranch, branch, comm_ci, repo):
     print(f">>> Apply patch file to {branch}")
     stopped = False
     cur_author = comm_ci.author()
