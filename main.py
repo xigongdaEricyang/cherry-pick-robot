@@ -107,6 +107,12 @@ def add_remote_url(repo):
     except Exception as e:
         print(">>> Fail to get remote_name, cause{}".format(str(e)))
 
+def ten_days_date():
+    today = datetime.date.today()
+    ten_days_ago = today - datetime.timedelta(days=10)
+    ten_days_ago_str = ten_days_ago.strftime('%Y-%m-%d')
+    return ten_days_ago_str
+
 
 def apply_patch(pr, baseBranch, branch, comm_ci):
     print(f">>> Apply patch file to {branch}")
@@ -119,8 +125,9 @@ def apply_patch(pr, baseBranch, branch, comm_ci):
     git.config("--local", "user.email", cur_author.email)
     git.clean("-f")
     if from_branch == "master":
-      git.fetch("origin", baseBranch)
-      git.checkout("-b", branch, "origin/{}".format(baseBranch)) 
+      git.remote("add", "origin2", "https://github.com/{}.git".format(repo.full_name))
+      git.fetch("origin2", baseBranch, "--shallow-since={}".format(ten_days_date()))
+      git.checkout("-b", branch, "origin2/{}".format(baseBranch)) 
     else:
       git.fetch("origin", from_branch)
       git.fetch("origin", baseBranch)
@@ -244,7 +251,7 @@ def add_repo_upstream(repo):
 
     try:
         print(">>>>, remote_url, {}".format(remote_url))
-        git.clone(remote_url, "--mirror" )
+        git.clone(remote_url, "--shallow-since={}".format(ten_days_date()) )
         sh.cd(repo.name)
         # git.remote('-vv')
         # git.remote('rm', remote_name)
@@ -357,7 +364,7 @@ def generate_pr(repo, pr, label, commit_ci):
         branch = "auto-pick-{}-to-{}".format(pr.number, baseBranch)
         new_pr_title = "[auto-pick-to-{}]{}".format(baseBranch, pr.title)
         body = append_cherry_pick_in_msg(repo, pr)
-        stopped, conflict_files = apply_patch(pr, baseBranch, branch, commit_ci)
+        stopped, conflict_files = apply_patch(pr, baseBranch, branch, commit_ci, repo)
         new_pr = repo.create_pull(
             title=new_pr_title, body=body, head=branch, base=baseBranch)
         print(f">>> Create PR: {pr_link(repo, new_pr)}")

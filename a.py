@@ -1,5 +1,6 @@
 import functools
 import re
+import datetime
 
 
 # def sort_cmp(number1, number2):
@@ -18,6 +19,11 @@ import re
 def getFullVersion(label):
     return label[len("cherry-pick-to-"):]
 
+def last_month_date():
+    today = datetime.date.today()
+    ten_days_ago = today - datetime.timedelta(days=10)
+    ten_days_ago_str = ten_days_ago.strftime('%Y-%m-%d')
+    return ten_days_ago_str
 
 if __name__ == "__main__":
     # label_regex = '^cherry-pick-v[0-9]*\.[0-9]*(.[0-9])?$'
@@ -26,7 +32,8 @@ if __name__ == "__main__":
     # # label_regex = 'cherry-pick-v3.1'
     label = 'cherry-pick-to-v3.2.0'
     # label1 = 'v3.1-cherry-pick'
-    print(getFullVersion(label))
+    # print(getFullVersion(label))
+    print(last_month_date())
     
     # version_label_re = re.compile(r"^v[0-9]*\.[0-9]*(.[0-9])?")
     # version_label = "v2.2.0"  
