@@ -38,6 +38,8 @@ already_auto_pick_prefix = "already-auto-picked"
 
 latest_100_commits = []
 
+origin_index=0
+
 
 class Commit:
     def __init__(self, commit=None):
@@ -125,9 +127,11 @@ def apply_patch(pr, baseBranch, branch, comm_ci, repo):
     git.config("--local", "user.email", cur_author.email)
     git.clean("-f")
     if from_branch == "master":
-      git.remote("add", "origin2", "https://github.com/{}.git".format(repo.full_name))
-      git.fetch("origin2", baseBranch, "--shallow-since={}".format(ten_days_date()))
-      git.checkout("-b", branch, "origin2/{}".format(baseBranch)) 
+      origin_index += 1
+      originName = "origin{}".format(origin_index)
+      git.remote("add", originName, "https://github.com/{}.git".format(repo.full_name))
+      git.fetch(originName, baseBranch, "--shallow-since={}".format(ten_days_date()))
+      git.checkout("-b", branch, "{}/{}".format(originName, baseBranch)) 
     else:
       git.fetch("origin", from_branch)
       git.fetch("origin", baseBranch)

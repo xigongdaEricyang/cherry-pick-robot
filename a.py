@@ -16,6 +16,8 @@ import datetime
 #         return 1
 #     return 0 
 
+originName = 0
+
 def getFullVersion(label):
     return label[len("cherry-pick-to-"):]
 
@@ -33,7 +35,8 @@ if __name__ == "__main__":
     label = 'cherry-pick-to-v3.2.0'
     # label1 = 'v3.1-cherry-pick'
     # print(getFullVersion(label))
-    print(last_month_date())
+    originName += 1
+    print(originName)
     
     # version_label_re = re.compile(r"^v[0-9]*\.[0-9]*(.[0-9])?")
     # version_label = "v2.2.0"  
