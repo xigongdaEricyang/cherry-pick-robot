@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 from email.mime import base
+import functools
 import os
 import re
+import sh
 import time
 import random
 import string
@@ -37,6 +39,7 @@ prLabelRegex = re.compile(r"cherry-pick-to-*")
 already_auto_pick_prefix = "already-auto-picked"
 
 latest_100_commits = []
+
 
 class Commit:
     def __init__(self, commit=None):
