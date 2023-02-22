@@ -11,7 +11,7 @@ from pathlib import Path
 from github import Github
 # from dingtalkchatbot.chatbot import DingtalkChatbot
 from sh import git
-from datetime import datetime
+import datetime
 
 
 # dingtalk_access_token = os.environ["INPUT_DINGTALK_ACCESS_TOKEN"]
