@@ -130,15 +130,16 @@ def apply_patch(pr, baseBranch, branch, comm_ci, repo):
     git.config("--local", "user.name", cur_author.name)
     git.config("--local", "user.email", cur_author.email)
     git.clean("-f")
-    if from_branch == "master":
-      originName = "origin{}".format(random_str())
-      git.remote("add", originName, "https://github.com/{}.git".format(repo.full_name))
-      git.fetch(originName, baseBranch, "--shallow-since={}".format(ten_days_date()))
-      git.checkout("-b", branch, "{}/{}".format(originName, baseBranch)) 
-    else:
-      git.fetch("origin", from_branch)
-      git.fetch("origin", baseBranch)
-      git.switch("-c", branch, "origin/{}".format(baseBranch))
+    # if from_branch == "master":
+      
+    # else:
+    #   git.fetch("origin", from_branch)
+    #   git.fetch("origin", baseBranch)
+    #   git.switch("-c", branch, "origin/{}".format(baseBranch))
+    originName = "origin{}".format(random_str())
+    git.remote("add", originName, "https://github.com/{}.git".format(repo.full_name))
+    git.fetch(originName, baseBranch, "--shallow-since={}".format(ten_days_date()))
+    git.checkout("-b", branch, "{}/{}".format(originName, baseBranch)) 
     submodule_path = os.environ["INPUT_SUBMODULE_PATH"]
     if submodule_path:
         update_submodule(submodule_path)
