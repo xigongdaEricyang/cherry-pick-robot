@@ -261,8 +261,8 @@ def add_repo_upstream(repo):
         print(">>>>, remote_url, {}".format(remote_url))
         git.clone(remote_url, "--shallow-since={}".format(ten_days_date()) )
         sh.cd(repo.name)
-        # git.remote('-vv')
-        # git.remote('rm', remote_name)
+        git.remote('-vv')
+        git.remote('rm', remote_name)
     except:
         print(">>> The remote upstream({}) not found.".format(remote_name))
     try:
