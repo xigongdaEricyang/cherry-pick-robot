@@ -242,7 +242,7 @@ def add_repo_upstream(repo):
         sh.cd(repo.name)
         # git.remote('-vv')
         # git.remote('rm', remote_name)
-    except:
+    except Exception as e:
         print(">>> The remote upstream({}) not found.".format(remote_name))
     try:
         # git.remote('add', remote_name, remote_url)
