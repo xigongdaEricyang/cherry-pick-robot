@@ -98,7 +98,7 @@ def update_submodule(submodule_path):
 
 
 def add_remote_url(repo):
-    remote_url = f'https://{token}@github.com/{repo.full_name}.git'
+    remote_url = 'https://github.com/{}.git'.format(repo.full_name)
     try:
         remote_name = repo.owner.login
         git.remote("add", remote_name, remote_url)
@@ -233,7 +233,7 @@ CONFLICT FILES:
 
 
 def add_repo_upstream(repo):
-    remote_url = 'https://github.com/{}.git'.format(repo.full_name)
+    remote_url = f'https://{token}@github.com/{repo.full_name}.git'
     remote_name = 'origin'
 
     try:
